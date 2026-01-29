@@ -80,8 +80,16 @@ export function parseCliProfileArgs(argv: string[]): CliProfileParseResult {
   return { ok: true, profile, argv: out };
 }
 
-function resolveProfileStateDir(profile: string, homedir: () => string): string {
+function resolveProfileStateDir(profile: string, homedir: () => string, env: NodeJS.ProcessEnv = process.env): string {
   const suffix = profile.toLowerCase() === "default" ? "" : `-${profile}`;
+  // Check if MOLTBOT_STATE_DIR is set (for portable deployment)
+  const stateDir = env.MOLTBOT_STATE_DIR?.trim();
+  if (stateDir && suffix === "") {
+    return stateDir;
+  }
+  if (stateDir) {
+    return stateDir + suffix;
+  }
   return path.join(homedir(), `.clawdbot${suffix}`);
 }
 

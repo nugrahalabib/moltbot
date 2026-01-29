@@ -4,7 +4,11 @@ import path from "node:path";
 import { CHANNEL_IDS } from "../../channels/registry.js";
 import { STATE_DIR } from "../../config/config.js";
 
-export const DEFAULT_SANDBOX_WORKSPACE_ROOT = path.join(os.homedir(), ".clawdbot", "sandboxes");
+const getDefaultSandboxWorkspaceRoot = () => {
+  const stateDir = STATE_DIR ?? process.env.MOLTBOT_STATE_DIR?.trim() ?? process.env.CLAWDBOT_STATE_DIR?.trim() ?? path.join(os.homedir(), ".clawdbot");
+  return path.join(stateDir, "sandboxes");
+};
+export const DEFAULT_SANDBOX_WORKSPACE_ROOT = getDefaultSandboxWorkspaceRoot();
 
 export const DEFAULT_SANDBOX_IMAGE = "moltbot-sandbox:bookworm-slim";
 export const DEFAULT_SANDBOX_CONTAINER_PREFIX = "moltbot-sbx-";

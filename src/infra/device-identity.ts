@@ -17,8 +17,11 @@ type StoredIdentity = {
   createdAtMs: number;
 };
 
-const DEFAULT_DIR = path.join(os.homedir(), ".clawdbot", "identity");
-const DEFAULT_FILE = path.join(DEFAULT_DIR, "device.json");
+const getDefaultDir = () => {
+  const stateDir = process.env.MOLTBOT_STATE_DIR?.trim() || process.env.CLAWDBOT_STATE_DIR?.trim() || path.join(os.homedir(), ".clawdbot");
+  return path.join(stateDir, "identity");
+};
+const getDefaultFile = () => path.join(getDefaultDir(), "device.json");
 
 function ensureDir(filePath: string) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -61,7 +64,7 @@ function generateIdentity(): DeviceIdentity {
   return { deviceId, publicKeyPem, privateKeyPem };
 }
 
-export function loadOrCreateDeviceIdentity(filePath: string = DEFAULT_FILE): DeviceIdentity {
+export function loadOrCreateDeviceIdentity(filePath: string = getDefaultFile()): DeviceIdentity {
   try {
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, "utf8");
@@ -161,10 +164,10 @@ export function verifyDeviceSignature(
     const key = publicKey.includes("BEGIN")
       ? crypto.createPublicKey(publicKey)
       : crypto.createPublicKey({
-          key: Buffer.concat([ED25519_SPKI_PREFIX, base64UrlDecode(publicKey)]),
-          type: "spki",
-          format: "der",
-        });
+        key: Buffer.concat([ED25519_SPKI_PREFIX, base64UrlDecode(publicKey)]),
+        type: "spki",
+        format: "der",
+      });
     const sig = (() => {
       try {
         return base64UrlDecode(signatureBase64Url);

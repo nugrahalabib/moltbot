@@ -143,6 +143,11 @@ export function resolveAgentWorkspaceDir(cfg: MoltbotConfig, agentId: string) {
     if (fallback) return resolveUserPath(fallback);
     return DEFAULT_AGENT_WORKSPACE_DIR;
   }
+  // For non-default agents, use state dir based path if available
+  const stateDir = process.env.MOLTBOT_STATE_DIR?.trim() || process.env.CLAWDBOT_STATE_DIR?.trim();
+  if (stateDir) {
+    return path.join(stateDir, "..", `workspace-${id}`);
+  }
   return path.join(os.homedir(), `clawd-${id}`);
 }
 

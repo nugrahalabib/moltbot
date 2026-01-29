@@ -11,6 +11,16 @@ export function resolveDefaultAgentWorkspaceDir(
   env: NodeJS.ProcessEnv = process.env,
   homedir: () => string = os.homedir,
 ): string {
+  // Prefer workspace relative to MOLTBOT_STATE_DIR for portable deployment
+  const stateDir = env.MOLTBOT_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
+  if (stateDir) {
+    const profile = env.CLAWDBOT_PROFILE?.trim();
+    if (profile && profile.toLowerCase() !== "default") {
+      return path.join(stateDir, "..", `workspace-${profile}`);
+    }
+    return path.join(stateDir, "..", "workspace");
+  }
+  // Legacy fallback to home directory
   const profile = env.CLAWDBOT_PROFILE?.trim();
   if (profile && profile.toLowerCase() !== "default") {
     return path.join(homedir(), `clawd-${profile}`);
@@ -213,7 +223,7 @@ async function resolveMemoryBootstrapEntries(
     let key = entry.filePath;
     try {
       key = await fs.realpath(entry.filePath);
-    } catch {}
+    } catch { }
     if (seen.has(key)) continue;
     seen.add(key);
     deduped.push(entry);
@@ -228,35 +238,35 @@ export async function loadWorkspaceBootstrapFiles(dir: string): Promise<Workspac
     name: WorkspaceBootstrapFileName;
     filePath: string;
   }> = [
-    {
-      name: DEFAULT_AGENTS_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_AGENTS_FILENAME),
-    },
-    {
-      name: DEFAULT_SOUL_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_SOUL_FILENAME),
-    },
-    {
-      name: DEFAULT_TOOLS_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_TOOLS_FILENAME),
-    },
-    {
-      name: DEFAULT_IDENTITY_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_IDENTITY_FILENAME),
-    },
-    {
-      name: DEFAULT_USER_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_USER_FILENAME),
-    },
-    {
-      name: DEFAULT_HEARTBEAT_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_HEARTBEAT_FILENAME),
-    },
-    {
-      name: DEFAULT_BOOTSTRAP_FILENAME,
-      filePath: path.join(resolvedDir, DEFAULT_BOOTSTRAP_FILENAME),
-    },
-  ];
+      {
+        name: DEFAULT_AGENTS_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_AGENTS_FILENAME),
+      },
+      {
+        name: DEFAULT_SOUL_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_SOUL_FILENAME),
+      },
+      {
+        name: DEFAULT_TOOLS_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_TOOLS_FILENAME),
+      },
+      {
+        name: DEFAULT_IDENTITY_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_IDENTITY_FILENAME),
+      },
+      {
+        name: DEFAULT_USER_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_USER_FILENAME),
+      },
+      {
+        name: DEFAULT_HEARTBEAT_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_HEARTBEAT_FILENAME),
+      },
+      {
+        name: DEFAULT_BOOTSTRAP_FILENAME,
+        filePath: path.join(resolvedDir, DEFAULT_BOOTSTRAP_FILENAME),
+      },
+    ];
 
   entries.push(...(await resolveMemoryBootstrapEntries(resolvedDir)));
 

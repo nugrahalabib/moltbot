@@ -38,8 +38,9 @@ const logCommand: HookHandler = async (event) => {
   }
 
   try {
-    // Create log directory
-    const logDir = path.join(os.homedir(), ".clawdbot", "logs");
+    // Create log directory using state dir from env or fallback
+    const stateDir = process.env.MOLTBOT_STATE_DIR?.trim() || process.env.CLAWDBOT_STATE_DIR?.trim() || path.join(os.homedir(), ".clawdbot");
+    const logDir = path.join(stateDir, "logs");
     await fs.mkdir(logDir, { recursive: true });
 
     // Append to command log file

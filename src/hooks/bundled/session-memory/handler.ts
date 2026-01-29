@@ -73,9 +73,11 @@ const saveSessionToMemory: HookHandler = async (event) => {
     const context = event.context || {};
     const cfg = context.cfg as MoltbotConfig | undefined;
     const agentId = resolveAgentIdFromSessionKey(event.sessionKey);
+    const stateDir = process.env.MOLTBOT_STATE_DIR?.trim() || process.env.CLAWDBOT_STATE_DIR?.trim() || path.join(os.homedir(), ".clawdbot");
+    const defaultWorkspace = path.join(stateDir, "..", "workspace");
     const workspaceDir = cfg
       ? resolveAgentWorkspaceDir(cfg, agentId)
-      : path.join(os.homedir(), "clawd");
+      : defaultWorkspace;
     const memoryDir = path.join(workspaceDir, "memory");
     await fs.mkdir(memoryDir, { recursive: true });
 

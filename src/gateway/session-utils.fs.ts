@@ -47,7 +47,9 @@ export function resolveSessionTranscriptCandidates(
   if (agentId) {
     candidates.push(resolveSessionTranscriptPath(sessionId, agentId));
   }
-  candidates.push(path.join(os.homedir(), ".clawdbot", "sessions", `${sessionId}.jsonl`));
+  // Fallback: use MOLTBOT_STATE_DIR if set, otherwise home directory
+  const stateDir = process.env.MOLTBOT_STATE_DIR?.trim() || process.env.CLAWDBOT_STATE_DIR?.trim() || path.join(os.homedir(), ".clawdbot");
+  candidates.push(path.join(stateDir, "sessions", `${sessionId}.jsonl`));
   return candidates;
 }
 
