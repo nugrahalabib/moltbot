@@ -1,0 +1,648 @@
+{
+  "devices": [
+    {
+      "id": "ebe8cdb8e42120ff6dp7dm",
+      "name": "AC Studio",
+      "category": "infrared_ac",
+      "product_name": "空调",
+      "local_key": "",
+      "online": true,
+      "ip": "",
+      "capabilities": [
+        {
+          "code": "wind",
+          "type": "ENUM",
+          "values": "{\"min\":0,\"max\":3,\"scale\":0,\"step\":1,\"type\":\"Integer\"}",
+          "mode": "ro"
+        },
+        {
+          "code": "mode",
+          "type": "ENUM",
+          "values": "{\"min\":0,\"max\":4,\"scale\":0,\"step\":1,\"type\":\"Integer\"}",
+          "mode": "ro"
+        },
+        {
+          "code": "power",
+          "type": "BOOLEAN",
+          "values": "{}",
+          "mode": "ro"
+        },
+        {
+          "code": "temp",
+          "type": "ENUM",
+          "values": "{\"min\":16,\"max\":30,\"scale\":0,\"step\":1,\"type\":\"Integer\"}",
+          "mode": "ro"
+        },
+        {
+          "code": "F",
+          "type": "ENUM",
+          "values": "{\"min\":0,\"max\":3,\"scale\":0,\"step\":1,\"type\":\"Integer\"}",
+          "mode": "rw"
+        },
+        {
+          "code": "M",
+          "type": "ENUM",
+          "values": "{\"min\":0,\"max\":4,\"scale\":0,\"step\":1,\"type\":\"Integer\"}",
+          "mode": "rw"
+        },
+        {
+          "code": "PowerOff",
+          "type": "STRING",
+          "values": "PowerOff",
+          "mode": "rw"
+        },
+        {
+          "code": "PowerOn",
+          "type": "STRING",
+          "values": "PowerOn",
+          "mode": "rw"
+        },
+        {
+          "code": "T",
+          "type": "ENUM",
+          "values": "{\"min\":16,\"max\":30,\"scale\":0,\"step\":1,\"type\":\"Integer\"}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "power",
+      "supports_brightness": false,
+      "supports_color": false
+    },
+    {
+      "id": "eb7dbe7fedb36d6552kjxu",
+      "name": "Remote",
+      "category": "wnykq",
+      "product_name": "双模红外遥控器",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.251.0",
+      "capabilities": [],
+      "switch_code": null,
+      "supports_brightness": false,
+      "supports_color": false
+    },
+    {
+      "id": "51073464840d8ea0a085",
+      "name": "lampu meja",
+      "category": "dj",
+      "product_name": "Wi-Fi Bulb",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.251.0",
+      "capabilities": [
+        {
+          "code": "switch_led",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "work_mode",
+          "type": "Enum",
+          "values": "{\"range\":[\"white\",\"colour\"]}",
+          "mode": "rw"
+        },
+        {
+          "code": "bright_value",
+          "type": "Integer",
+          "values": "{\"min\":25,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "colour_data",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "scene_data",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "flash_scene_1",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "flash_scene_2",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "flash_scene_3",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "flash_scene_4",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":1,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "temp_value",
+          "type": "Integer",
+          "values": "{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "switch_led",
+      "supports_brightness": true,
+      "supports_color": true
+    },
+    {
+      "id": "eb5627cd6000939cb1rebe",
+      "name": "lampu strip dinding",
+      "category": "dd",
+      "product_name": "BARDI LED Flowing Strip 5M",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.251.0",
+      "capabilities": [
+        {
+          "code": "switch_led",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "work_mode",
+          "type": "Enum",
+          "values": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}",
+          "mode": "rw"
+        },
+        {
+          "code": "bright_value",
+          "type": "Integer",
+          "values": "{\"min\":10,\"max\":1000,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "colour_data",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown",
+          "type": "Integer",
+          "values": "{\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "music_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "switch_led",
+      "supports_brightness": true,
+      "supports_color": true
+    },
+    {
+      "id": "ebdfd36d0464dffc1aqabz",
+      "name": "soft box 2",
+      "category": "dj",
+      "product_name": "BARDI 12w rgbww bulb",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.55.101",
+      "capabilities": [
+        {
+          "code": "switch_led",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "work_mode",
+          "type": "Enum",
+          "values": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}",
+          "mode": "rw"
+        },
+        {
+          "code": "bright_value_v2",
+          "type": "Integer",
+          "values": "{\"min\":10,\"max\":1000,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "temp_value_v2",
+          "type": "Integer",
+          "values": "{\"min\":0,\"max\":1000,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "colour_data_v2",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "scene_data_v2",
+          "type": "Json",
+          "values": "{\"scene_num\":{\"min\":1,\"scale\":0,\"max\":8,\"step\":1},\"scene_units\": {\"unit_change_mode\":{\"range\":[\"static\",\"jump\",\"gradient\"]},\"unit_switch_duration\":{\"min\":0,\"scale\":0,\"max\":100,\"step\":1},\"unit_gradient_duration\":{\"min\":0,\"scale\":0,\"max\":100,\"step\":1},\"bright\":{\"min\":0,\"scale\":0,\"max\":1000,\"step\":1},\"temperature\":{\"min\":0,\"scale\":0,\"max\":1000,\"step\":1},\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown_1",
+          "type": "Integer",
+          "values": "{\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "music_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "control_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "power_memory",
+          "type": "Raw",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "do_not_disturb",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "switch_led",
+      "supports_brightness": true,
+      "supports_color": true
+    },
+    {
+      "id": "35680020a4e57ca73a75",
+      "name": "lampu strip meja",
+      "category": "dj",
+      "product_name": "BARDI RGBWW strip",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.251.0",
+      "capabilities": [
+        {
+          "code": "switch_led",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "work_mode",
+          "type": "Enum",
+          "values": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}",
+          "mode": "rw"
+        },
+        {
+          "code": "bright_value_v2",
+          "type": "Integer",
+          "values": "{\"min\":10,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "temp_value_v2",
+          "type": "Integer",
+          "values": "{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "colour_data_v2",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "scene_data_v2",
+          "type": "Json",
+          "values": "{\"scene_num\":{\"min\":1,\"scale\":0,\"max\":8,\"step\":1},\"scene_units\": {\"unit_change_mode\":{\"range\":[\"static\",\"jump\",\"gradient\"]},\"unit_switch_duration\":{\"min\":0,\"scale\":0,\"max\":100,\"step\":1},\"unit_gradient_duration\":{\"min\":0,\"scale\":0,\"max\":100,\"step\":1},\"bright\":{\"min\":0,\"scale\":0,\"max\":1000,\"step\":1},\"temperature\":{\"min\":0,\"scale\":0,\"max\":1000,\"step\":1},\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown_1",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "music_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "control_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "switch_led",
+      "supports_brightness": true,
+      "supports_color": true
+    },
+    {
+      "id": "eb6d2ddecee2083ecdhabi",
+      "name": "soft box 1",
+      "category": "dj",
+      "product_name": "BARDI 12w rgbww bulb",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.55.101",
+      "capabilities": [
+        {
+          "code": "switch_led",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "work_mode",
+          "type": "Enum",
+          "values": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}",
+          "mode": "rw"
+        },
+        {
+          "code": "bright_value_v2",
+          "type": "Integer",
+          "values": "{\"min\":10,\"max\":1000,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "temp_value_v2",
+          "type": "Integer",
+          "values": "{\"min\":0,\"max\":1000,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "colour_data_v2",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "scene_data_v2",
+          "type": "Json",
+          "values": "{\"scene_num\":{\"min\":1,\"scale\":0,\"max\":8,\"step\":1},\"scene_units\": {\"unit_change_mode\":{\"range\":[\"static\",\"jump\",\"gradient\"]},\"unit_switch_duration\":{\"min\":0,\"scale\":0,\"max\":100,\"step\":1},\"unit_gradient_duration\":{\"min\":0,\"scale\":0,\"max\":100,\"step\":1},\"bright\":{\"min\":0,\"scale\":0,\"max\":1000,\"step\":1},\"temperature\":{\"min\":0,\"scale\":0,\"max\":1000,\"step\":1},\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown_1",
+          "type": "Integer",
+          "values": "{\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "music_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "control_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "power_memory",
+          "type": "Raw",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "do_not_disturb",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "switch_led",
+      "supports_brightness": true,
+      "supports_color": true
+    },
+    {
+      "id": "eb4cbd101c4fc334a4m2c2",
+      "name": "lampu tidur",
+      "category": "cz",
+      "product_name": "Smart plug123",
+      "local_key": "",
+      "online": true,
+      "ip": "182.253.251.0",
+      "capabilities": [
+        {
+          "code": "switch_1",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown_1",
+          "type": "Integer",
+          "values": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "add_ele",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":50000,\"scale\":3,\"step\":100}",
+          "mode": "ro"
+        },
+        {
+          "code": "cur_current",
+          "type": "Integer",
+          "values": "{\"unit\":\"mA\",\"min\":0,\"max\":30000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "cur_power",
+          "type": "Integer",
+          "values": "{\"unit\":\"W\",\"min\":0,\"max\":50000,\"scale\":1,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "cur_voltage",
+          "type": "Integer",
+          "values": "{\"unit\":\"V\",\"min\":0,\"max\":5000,\"scale\":1,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "voltage_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "electric_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "power_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "electricity_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "fault",
+          "type": "Bitmap",
+          "values": "{\"label\":[\"ov_cr\",\"ov_vol\",\"ov_pwr\",\"ls_cr\",\"ls_vol\",\"ls_pow\"]}",
+          "mode": "ro"
+        }
+      ],
+      "switch_code": "switch_1",
+      "supports_brightness": false,
+      "supports_color": false
+    },
+    {
+      "id": "ebdd12bed2357e63a27npe",
+      "name": "monitor",
+      "category": "cz",
+      "product_name": "Smart plug123",
+      "local_key": "",
+      "online": false,
+      "ip": "182.253.251.0",
+      "capabilities": [
+        {
+          "code": "switch_1",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown_1",
+          "type": "Integer",
+          "values": "{\"unit\":\"s\",\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "add_ele",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":50000,\"scale\":3,\"step\":100}",
+          "mode": "ro"
+        },
+        {
+          "code": "cur_current",
+          "type": "Integer",
+          "values": "{\"unit\":\"mA\",\"min\":0,\"max\":30000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "cur_power",
+          "type": "Integer",
+          "values": "{\"unit\":\"W\",\"min\":0,\"max\":50000,\"scale\":1,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "cur_voltage",
+          "type": "Integer",
+          "values": "{\"unit\":\"V\",\"min\":0,\"max\":5000,\"scale\":1,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "voltage_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "electric_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "power_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "electricity_coe",
+          "type": "Integer",
+          "values": "{\"unit\":\"\",\"min\":0,\"max\":1000000,\"scale\":0,\"step\":1}",
+          "mode": "ro"
+        },
+        {
+          "code": "fault",
+          "type": "Bitmap",
+          "values": "{\"label\":[\"ov_cr\",\"ov_vol\",\"ov_pwr\",\"ls_cr\",\"ls_vol\",\"ls_pow\"]}",
+          "mode": "ro"
+        }
+      ],
+      "switch_code": "switch_1",
+      "supports_brightness": false,
+      "supports_color": false
+    },
+    {
+      "id": "ebe69cff46dd49665414kw",
+      "name": "lampu strip dinding",
+      "category": "dd",
+      "product_name": "BARDI LED Flowing Strip 5M",
+      "local_key": "",
+      "online": false,
+      "ip": "182.253.251.0",
+      "capabilities": [
+        {
+          "code": "switch_led",
+          "type": "Boolean",
+          "values": "{}",
+          "mode": "rw"
+        },
+        {
+          "code": "work_mode",
+          "type": "Enum",
+          "values": "{\"range\":[\"white\",\"colour\",\"scene\",\"music\"]}",
+          "mode": "rw"
+        },
+        {
+          "code": "bright_value",
+          "type": "Integer",
+          "values": "{\"min\":10,\"max\":1000,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "colour_data",
+          "type": "Json",
+          "values": "{\"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}}",
+          "mode": "rw"
+        },
+        {
+          "code": "countdown",
+          "type": "Integer",
+          "values": "{\"min\":0,\"max\":86400,\"scale\":0,\"step\":1}",
+          "mode": "rw"
+        },
+        {
+          "code": "music_data",
+          "type": "Json",
+          "values": "{\"change_mode\":{\"range\":[\"direct\",\"gradient\"]}, \"bright\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"temperature\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":1000,\"step\":1}, \"h\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":360,\"step\":1},\"s\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1},\"v\":{\"min\":0,\"scale\":0,\"unit\":\"\",\"max\":255,\"step\":1}}",
+          "mode": "rw"
+        }
+      ],
+      "switch_code": "switch_led",
+      "supports_brightness": true,
+      "supports_color": true
+    }
+  ],
+  "updated": "2026-01-31 14:40:41"
+}
