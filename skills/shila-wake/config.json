@@ -1,0 +1,28 @@
+{
+  "default_mode": "normal",
+  "snooze_minutes": 10,
+  "max_snooze": 3,
+  "volume": 100,
+  "sounds": {
+    "gentle": "gentle_alarm.wav",
+    "normal": "alarm.wav",
+    "nuclear": "nuclear_alarm.wav"
+  },
+  "tts": {
+    "enabled": true,
+    "messages": {
+      "gentle": "Selamat pagi, Sayang. Sudah waktunya bangun.",
+      "normal": "Bangun Sayang! Sudah pagi!",
+      "nuclear": "BANGUN! SUDAH TELAT! CEPAT BANGUN SEKARANG!"
+    }
+  },
+  "tuya": {
+    "enabled": true,
+    "wake_lights": ["lampu meja", "soft box 1", "soft box 2", "lampu strip meja", "lampu strip dinding"],
+    "ac_device": "AC Studio"
+  },
+  "chat": {
+    "enabled": true,
+    "target": "+6287877974096"
+  }
+}

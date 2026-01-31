@@ -1,0 +1,12 @@
+[
+  {
+    "id": "remind_1769852544",
+    "message": "Meeting dengan client",
+    "time": "14:00",
+    "date": "2026-02-01",
+    "repeat": "once",
+    "priority": "high",
+    "enabled": true,
+    "created_at": "2026-01-31T16:42:24.515155"
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "alarm_1769855061",
+    "time": "17:26",
+    "date": "2026-01-31",
+    "target_datetime": "2026-01-31T17:26:00",
+    "mode": "nuclear",
+    "label": "Test v2.0",
+    "repeat": "once",
+    "enabled": false,
+    "snooze_count": 0,
+    "last_triggered": "2026-01-31T17:26:27.347722",
+    "created_at": "2026-01-31T17:24:21.246503"
+  }
+]

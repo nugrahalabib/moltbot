@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shila Wake System v2.0</title>
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --primary-dark: #E85555;
+            --secondary: #4ECDC4;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --light: #eee;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #f44336;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+            color: var(--light);
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 { font-size: 2rem; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { font-size: 2.5rem; }
+        .header .time { text-align: right; }
+        .header .time .current-time { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
+        .header .time .current-date { color: #888; }
+        .header .scheduler-status {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .scheduler-status.running { background: var(--success); }
+        .scheduler-status.stopped { background: var(--danger); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-title { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .card-title span { font-size: 1.5rem; }
+        
+        .next-alarm-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            grid-column: span 2;
+        }
+        
+        .next-alarm-card .alarm-time { font-size: 4rem; font-weight: bold; text-align: center; margin: 10px 0; }
+        .next-alarm-card .alarm-date { text-align: center; font-size: 1.2rem; opacity: 0.9; margin-bottom: 10px; }
+        .next-alarm-card .alarm-info { text-align: center; font-size: 1.1rem; opacity: 0.9; }
+        .next-alarm-card .alarm-countdown { text-align: center; font-size: 1.5rem; margin-top: 15px; opacity: 0.9; font-weight: bold; }
+        
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; text-align: center; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: bold; color: var(--secondary); }
+        .stat-card .stat-label { font-size: 0.9rem; color: #888; }
+        
+        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        .action-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .action-btn.morning { background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%); }
+        .action-btn.work { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .action-btn.sleep { background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); }
+        .action-btn.movie { background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%); }
+        
+        .alarm-list, .reminder-list { max-height: 300px; overflow-y: auto; }
+        
+        .alarm-item, .reminder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .alarm-item .time { font-size: 1.3rem; font-weight: bold; }
+        .alarm-item .date { font-size: 0.8rem; color: #888; }
+        .alarm-item .mode { padding: 3px 10px; border-radius: 15px; font-size: 0.8rem; text-transform: uppercase; }
+        
+        .mode.gentle { background: var(--success); }
+        .mode.normal { background: var(--warning); color: #333; }
+        .mode.nuclear { background: var(--danger); }
+        
+        .alarm-item .label { color: #888; font-size: 0.9rem; }
+        
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .delete-btn:hover { opacity: 1; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #888; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover { background: var(--primary-dark); }
+        
+        .smart-home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        
+        .smart-btn {
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        .smart-btn span { font-size: 1.5rem; }
+        .smart-btn.on { background: var(--success); color: white; }
+        .smart-btn.off { background: rgba(255,255,255,0.1); color: white; }
+        .smart-btn:hover { transform: scale(1.05); }
+        
+        .test-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        .test-btn {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .test-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .next-alarm-card { grid-column: span 1; }
+            .header { flex-direction: column; text-align: center; }
+            .header .time { margin-top: 15px; }
+            .stats { grid-template-columns: 1fr; }
+            .test-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><span>🌅</span> Shila Wake System <small style="font-size: 0.5em; opacity: 0.7;">v2.0</small></h1>
+            <div class="time">
+                <div class="current-time" id="clock">{{ current_time }}</div>
+                <div class="current-date">{{ current_date }}</div>
+                <div class="scheduler-status {% if scheduler_running %}running{% else %}stopped{% endif %}">
+                    Scheduler: {% if scheduler_running %}Running{% else %}Stopped{% endif %}
+                </div>
+            </div>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ alarms|length }}</div>
+                <div class="stat-label">Alarms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ reminders|length }}</div>
+                <div class="stat-label">Reminders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="next-alarm-time">{% if next_alarm %}{{ next_alarm.alarm.time }}{% else %}--:--{% endif %}</div>
+                <div class="stat-label">Next Alarm</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card next-alarm-card">
+                {% if next_alarm %}
+                <div class="alarm-time" id="next-time">{{ next_alarm.alarm.time }}</div>
+                <div class="alarm-date" id="next-date">{{ next_alarm.alarm.date }}</div>
+                <div class="alarm-info">
+                    <span class="mode {{ next_alarm.alarm.mode }}">{{ next_alarm.alarm.mode }}</span>
+                    <span id="next-label">{{ next_alarm.alarm.label }}</span>
+                </div>
+                <div class="alarm-countdown" id="countdown">Calculating...</div>
+                {% else %}
+                <div class="alarm-time">--:--</div>
+                <div class="alarm-date">No date</div>
+                <div class="alarm-info">No alarm set</div>
+                <div class="alarm-countdown">Set an alarm to get started!</div>
+                {% endif %}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span>🎛️</span> Quick Routines</div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn morning" onclick="activateRoutine('morning')">☀️ Morning</button>
+                    <button class="action-btn work" onclick="activateRoutine('work')">💼 Work</button>
+                    <button class="action-btn sleep" onclick="activateRoutine('sleep')">🌙 Sleep</button>
+                    <button class="action-btn movie" onclick="activateRoutine('movie')">🎬 Movie</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span>⏰</span> Add Alarm</div>
+                </div>
+                <form id="alarmForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input type="time" name="time" required value="07:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Date (optional)</label>
+                            <input type="date" name="date" placeholder="Auto if empty">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mode</label>
+                        <select name="mode">
+                            <option value="gentle">☀️ Gentle</option>
+                            <option value="normal" selected>⏰ Normal</option>
+                            <option value="nuclear">☢️ Nuclear</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Label</label>
+                        <input type="text" name="label" placeholder="Alarm label...">
+                    </div>
+                    <button type="submit" class="submit-btn">Add Alarm</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span>📋</span> Alarms</div>
+                </div>
+                <div class="alarm-list" id="alarmList">
+                    {% for alarm in alarms %}
+                    <div class="alarm-item" data-id="{{ alarm.id }}">
+                        <div>
+                            <div class="time">{{ alarm.time }}</div>
+                            <div class="date">{{ alarm.date or 'No date' }}</div>
+                            <div class="label">{{ alarm.label }}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="mode {{ alarm.mode }}">{{ alarm.mode }}</span>
+                            <button class="delete-btn" onclick="deleteAlarm('{{ alarm.id }}')">🗑️</button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="text-align: center; color: #888; padding: 20px;">No alarms set</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span>📝</span> Add Reminder</div>
+                </div>
+                <form id="reminderForm">
+                    <div class="form-group">
+                        <label>Message</label>
+                        <input type="text" name="message" placeholder="Reminder message..." required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input type="time" name="time" required value="14:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Date (optional)</label>
+                            <input type="date" name="date">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select name="priority">
+                            <option value="low">Low</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Add Reminder</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span>🏠</span> Smart Home</div>
+                </div>
+                <div class="smart-home-grid">
+                    <button class="smart-btn on" onclick="controlLights('on')">💡 Lights ON</button>
+                    <button class="smart-btn off" onclick="controlLights('off')">💡 Lights OFF</button>
+                    <button class="smart-btn on" onclick="controlAC('on')">❄️ AC ON</button>
+                    <button class="smart-btn off" onclick="controlAC('off')">❄️ AC OFF</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span>🧪</span> Test</div>
+                </div>
+                <div class="test-grid">
+                    <button class="test-btn" onclick="runTest('sound')">🔊 Sound</button>
+                    <button class="test-btn" onclick="runTest('lights')">💡 Lights</button>
+                    <button class="test-btn" onclick="runTest('tts')">🗣️ TTS</button>
+                    <button class="test-btn" onclick="runTest('wake')">⏰ Wake</button>
+                </div>
+                <button class="submit-btn" style="margin-top: 15px;" onclick="manualCheck()">🔄 Manual Check</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // Clock update
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID', { 
+                hour: '2-digit', minute: '2-digit', second: '2-digit' 
+            });
+        }
+        setInterval(updateClock, 1000);
+        
+        // Fetch and update countdown from API
+        async function updateCountdown() {
+            try {
+                const response = await fetch('/api/next-alarm');
+                const data = await response.json();
+                
+                if (data.next_alarm) {
+                    const alarm = data.next_alarm;
+                    const seconds = alarm.seconds_until;
+                    
+                    const h = Math.floor(seconds / 3600);
+                    const m = Math.floor((seconds % 3600) / 60);
+                    const s = seconds % 60;
+                    
+                    document.getElementById('countdown').textContent = `${h}h ${m}m ${s}s until alarm`;
+                    document.getElementById('next-time').textContent = alarm.time;
+                    document.getElementById('next-date').textContent = alarm.date;
+                    document.getElementById('next-label').textContent = alarm.label;
+                    document.getElementById('next-alarm-time').textContent = alarm.time;
+                }
+            } catch (err) {
+                console.error('Failed to update countdown:', err);
+            }
+        }
+        
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? '#f44336' : '#4CAF50';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+        
+        // Alarm form
+        document.getElementById('alarmForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/alarms', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Alarm added!');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (err) {
+                showToast('Error adding alarm', 'error');
+            }
+        });
+        
+        // Reminder form
+        document.getElementById('reminderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/reminders', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Reminder added!');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (err) {
+                showToast('Error adding reminder', 'error');
+            }
+        });
+        
+        async function deleteAlarm(id) {
+            if (!confirm('Delete this alarm?')) return;
+            try {
+                await fetch(`/api/alarms/${id}`, { method: 'DELETE' });
+                showToast('Alarm deleted!');
+                setTimeout(() => location.reload(), 1000);
+            } catch (err) {
+                showToast('Error deleting alarm', 'error');
+            }
+        }
+        
+        async function activateRoutine(name) {
+            try {
+                await fetch(`/api/routines/${name}`, { method: 'POST' });
+                showToast(`${name} routine activated!`);
+            } catch (err) {
+                showToast('Error activating routine', 'error');
+            }
+        }
+        
+        async function controlLights(action) {
+            try {
+                await fetch(`/api/lights/${action}`, { method: 'POST' });
+                showToast(`Lights ${action}!`);
+            } catch (err) {
+                showToast('Error controlling lights', 'error');
+            }
+        }
+        
+        async function controlAC(action) {
+            try {
+                await fetch(`/api/ac/${action}`, { method: 'POST' });
+                showToast(`AC ${action}!`);
+            } catch (err) {
+                showToast('Error controlling AC', 'error');
+            }
+        }
+        
+        async function runTest(type) {
+            try {
+                await fetch(`/api/test/${type}`, { method: 'POST' });
+                showToast(`Testing ${type}...`);
+            } catch (err) {
+                showToast('Error running test', 'error');
+            }
+        }
+        
+        async function manualCheck() {
+            try {
+                await fetch('/api/check', { method: 'POST' });
+                showToast('Manual check triggered!');
+            } catch (err) {
+                showToast('Error running check', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
