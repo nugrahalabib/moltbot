@@ -1,0 +1,136 @@
+[
+    {
+        "id": "routine_morning",
+        "name": "Morning Wake Up",
+        "icon": "🌅",
+        "color": "orange",
+        "description": "Rangkaian pagi untuk bangun kerja",
+        "trigger_time": "06:30",
+        "trigger_date": null,
+        "mode": "gentle",
+        "sound": "gentle_alarm.wav",
+        "repeat": "weekdays",
+        "days": [
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri"
+        ],
+        "devices": [
+            {
+                "id": "lampu_meja",
+                "icon": "💡",
+                "name": "Lampu Meja",
+                "type": "light",
+                "action": "on",
+                "brightness": 80
+            },
+            {
+                "id": "ac_studio",
+                "icon": "❄️",
+                "name": "AC Studio",
+                "type": "ac",
+                "action": "off"
+            }
+        ],
+        "actions": [
+            {
+                "id": "voice",
+                "icon": "🔊",
+                "name": "Voice",
+                "message": "Selamat pagi sayang!"
+            },
+            {
+                "id": "weather",
+                "icon": "🌤️",
+                "name": "Weather Report"
+            }
+        ],
+        "enabled": true,
+        "run_count": 0,
+        "success_count": 0,
+        "last_triggered": null,
+        "created_at": "2026-02-01T00:00:00"
+    },
+    {
+        "id": "routine_work",
+        "name": "Work Mode",
+        "icon": "💼",
+        "color": "blue",
+        "description": "Setup untuk mulai kerja",
+        "trigger_time": null,
+        "trigger_date": null,
+        "mode": "normal",
+        "sound": null,
+        "repeat": "once",
+        "days": [],
+        "devices": [
+            {
+                "id": "lampu_meja",
+                "icon": "💡",
+                "name": "Lampu Meja",
+                "type": "light",
+                "action": "on",
+                "brightness": 100
+            },
+            {
+                "id": "ac_studio",
+                "icon": "❄️",
+                "name": "AC Studio",
+                "type": "ac",
+                "action": "on",
+                "temperature": 24
+            }
+        ],
+        "actions": [],
+        "enabled": true,
+        "run_count": 0,
+        "success_count": 0,
+        "last_triggered": null,
+        "created_at": "2026-02-01T00:00:00"
+    },
+    {
+        "id": "routine_sleep",
+        "name": "Sleep Time",
+        "icon": "🌙",
+        "color": "purple",
+        "description": "Persiapan tidur",
+        "trigger_time": "22:00",
+        "trigger_date": null,
+        "mode": "gentle",
+        "sound": null,
+        "repeat": "daily",
+        "days": [],
+        "devices": [
+            {
+                "id": "lampu_meja",
+                "icon": "💡",
+                "name": "Lampu Meja",
+                "type": "light",
+                "action": "off"
+            },
+            {
+                "id": "ac_studio",
+                "icon": "❄️",
+                "name": "AC Studio",
+                "type": "ac",
+                "action": "on",
+                "temperature": 26
+            }
+        ],
+        "actions": [
+            {
+                "id": "voice",
+                "icon": "🔊",
+                "name": "Voice",
+                "message": "Selamat malam, tidur nyenyak ya!"
+            }
+        ],
+        "enabled": true,
+        "run_count": 0,
+        "success_count": 0,
+        "last_triggered": null,
+        "created_at": "2026-02-01T00:00:00"
+    }
+]

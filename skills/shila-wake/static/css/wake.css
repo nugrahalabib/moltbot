@@ -1,0 +1,528 @@
+/* ===========================================
+   Shila Wake - Custom Styles
+   Extends Shila's base design system
+   =========================================== */
+
+/* Current time pill in topbar */
+.current-time-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background: var(--secondary);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+/* Hero Card - Next Alarm */
+.hero-card {
+    background: linear-gradient(135deg, var(--accent) 0%, #e85555 100%);
+    border-radius: var(--radius-xl);
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+    box-shadow: var(--shadow-lg), 0 0 40px var(--accent-glow);
+    animation: rise 0.4s var(--ease-out) backwards;
+}
+
+.hero-time {
+    font-size: 4rem;
+    font-weight: 700;
+    color: white;
+    font-family: var(--mono);
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.hero-date {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 8px;
+}
+
+.hero-right {
+    text-align: right;
+}
+
+.mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.hero-countdown {
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-top: 12px;
+    font-weight: 600;
+}
+
+.hero-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 8px;
+}
+
+/* No alarm state */
+.hero-card.no-alarm {
+    background: var(--card);
+    border: 1px dashed var(--border-strong);
+    box-shadow: none;
+}
+
+.hero-card.no-alarm .hero-time {
+    color: var(--muted);
+    font-size: 2rem;
+}
+
+/* Stat Cards with Accent */
+.stat-accent {
+    border-left: 3px solid var(--accent-2);
+}
+
+.stat-accent .stat-value {
+    color: var(--accent-2);
+}
+
+/* Quick Action Buttons */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.action-btn {
+    padding: 16px 12px;
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: white;
+    transition: all 0.2s var(--ease-out);
+    box-shadow: var(--shadow-sm);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn .icon {
+    font-size: 1.6rem;
+}
+
+.action-btn.morning {
+    background: linear-gradient(135deg, #FFC107, #FF9800);
+}
+
+.action-btn.work {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.action-btn.sleep {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+.action-btn.movie {
+    background: linear-gradient(135deg, #E91E63, #C2185B);
+}
+
+/* Smart Home Grid */
+.smart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.smart-btn {
+    padding: 14px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s var(--ease-out);
+    background: var(--bg-elevated);
+    color: var(--text);
+}
+
+.smart-btn .icon {
+    font-size: 1.4rem;
+}
+
+.smart-btn:hover {
+    border-color: var(--border-strong);
+    transform: scale(1.02);
+}
+
+.smart-btn.active {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: white;
+}
+
+/* Alarm List Item */
+.alarm-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--duration-fast) ease;
+}
+
+.alarm-item:hover {
+    border-color: var(--border-strong);
+}
+
+.alarm-time {
+    font-size: 1.4rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--text-strong);
+    min-width: 80px;
+}
+
+.alarm-info {
+    display: grid;
+    gap: 2px;
+}
+
+.alarm-date {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.alarm-label {
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.alarm-mode {
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.alarm-mode.gentle {
+    background: var(--ok-subtle);
+    color: var(--ok);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.alarm-mode.normal {
+    background: var(--warn-subtle);
+    color: var(--warn);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.alarm-mode.nuclear {
+    background: var(--danger-subtle);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.alarm-toggle {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 26px;
+    border-radius: 13px;
+    background: #3a3a3a;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.alarm-toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.alarm-toggle.enabled {
+    background: var(--accent);
+}
+
+.alarm-toggle.enabled::after {
+    transform: translateX(22px);
+}
+
+/* Alarm Controls Container */
+.alarm-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.alarm-controls .btn-icon {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.15s ease;
+}
+
+.alarm-controls .btn-icon:hover {
+    background: var(--secondary);
+}
+
+.alarm-controls .btn-icon.edit:hover {
+    color: var(--accent-2);
+}
+
+.alarm-controls .btn-icon.delete:hover {
+    color: var(--danger);
+}
+
+/* Device/Action Badges */
+.alarm-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.alarm-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--secondary);
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.alarm-badge.device {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+}
+
+.alarm-badge.action {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+/* Weather Widget */
+.weather-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.weather-icon {
+    font-size: 3rem;
+}
+
+.weather-temp {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-strong);
+}
+
+.weather-condition {
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+.weather-details {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+/* Schedule List */
+.schedule-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.schedule-item:last-child {
+    border-bottom: none;
+}
+
+.schedule-time {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: var(--mono);
+}
+
+.schedule-title {
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s var(--ease-out);
+    min-width: 280px;
+}
+
+.toast.success {
+    border-color: var(--ok);
+}
+
+.toast.error {
+    border-color: var(--danger);
+}
+
+.toast-icon {
+    font-size: 1.2rem;
+}
+
+.toast-message {
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Form Enhancements */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+/* Section Spacing */
+.section-gap {
+    margin-top: 20px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+}
+
+.empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state .title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 24px;
+    }
+
+    .hero-right {
+        text-align: center;
+    }
+
+    .hero-time {
+        font-size: 3rem;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form-row,
+    .form-row-3 {
+        grid-template-columns: 1fr;
+    }
+}

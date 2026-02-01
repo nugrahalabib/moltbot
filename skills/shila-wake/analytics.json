@@ -1,0 +1,15 @@
+{
+    "wake_logs": [],
+    "streaks": {
+        "current": 0,
+        "longest": 0,
+        "last_success_date": null,
+        "target": 7
+    },
+    "totals": {
+        "total_alarms": 0,
+        "on_time": 0,
+        "late": 0,
+        "missed": 0
+    }
+}

@@ -1,0 +1,1718 @@
+{% extends "base.html" %}
+
+{% block title %}Alarms - Shila Wake System{% endblock %}
+{% block page_title %}Alarms{% endblock %}
+{% block page_sub %}Manage your wake-up alarms{% endblock %}
+
+{% block content %}
+<!-- Alarm List Card -->
+<section class="card" style="margin-top: 8px;">
+    <div class="card-header-row">
+        <div>
+            <div class="card-title">Your Alarms</div>
+            <div class="card-sub">{{ alarms|length }} alarms configured</div>
+        </div>
+        <button type="button" class="btn primary" onclick="toggleCreateForm()">+ Add New Alarm</button>
+    </div>
+
+    <div class="alarm-list">
+        {% if alarms %}
+        {% for alarm in alarms %}
+        <div class="alarm-item" id="alarm-{{ alarm.id }}">
+            <div class="alarm-time">{{ alarm.time }}</div>
+            <div class="alarm-info">
+                <div class="alarm-date">{{ alarm.date_display }}</div>
+                <div class="alarm-label">{{ alarm.label or alarm.repeat_text }}</div>
+                {% if alarm.devices or alarm.actions %}
+                <div class="alarm-badges">
+                    {% for device in alarm.devices[:3] %}
+                    <span class="alarm-badge device">💡 {{ device.name or device.id }}</span>
+                    {% endfor %}
+                    {% if alarm.devices|length > 3 %}
+                    <span class="alarm-badge device">+{{ alarm.devices|length - 3 }} more</span>
+                    {% endif %}
+                    {% for action in alarm.actions[:2] %}
+                    <span class="alarm-badge action">⚡ {{ action.id }}</span>
+                    {% endfor %}
+                    {% if alarm.actions|length > 2 %}
+                    <span class="alarm-badge action">+{{ alarm.actions|length - 2 }} more</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <span class="alarm-mode {{ alarm.mode|lower }}">{{ alarm.mode }}</span>
+            <div class="alarm-controls">
+                <button class="alarm-toggle {% if alarm.enabled %}enabled{% endif %}"
+                    onclick="toggleAlarm('{{ alarm.id }}', this)" title="Toggle alarm"></button>
+                <button class="btn-icon edit" onclick="editAlarm('{{ alarm.id }}')" title="Edit">
+                    ✏️
+                </button>
+                <button class="btn-icon delete" onclick="deleteAlarm('{{ alarm.id }}')" title="Delete">
+                    🗑️
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">⏰</div>
+            <div class="title">No alarms yet</div>
+            <p>Click "Add New Alarm" to create your first alarm</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Add New Alarm (Hidden by default) -->
+<section id="createAlarmSection" class="card section-gap hidden">
+    <div class="card-header-row">
+        <div>
+            <div class="card-title">Add New Alarm</div>
+            <div class="card-sub">Configure alarm with smart home automation</div>
+        </div>
+        <button type="button" class="btn-close-form" onclick="toggleCreateForm()">× Close</button>
+    </div>
+
+    <form id="alarmForm" class="alarm-form">
+        <!-- SECTION 1: Schedule -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-number">1</span>
+                <div>
+                    <div class="section-label">⏰ Schedule</div>
+                    <div class="section-desc">Set when the alarm should trigger</div>
+                </div>
+            </div>
+
+            <!-- Row 1: Time, Date, Label -->
+            <div class="form-grid-3">
+                <label class="field">
+                    <span>Time</span>
+                    <input type="time" name="time" required>
+                </label>
+                <label class="field">
+                    <span>Date</span>
+                    <input type="date" name="date" required>
+                </label>
+                <label class="field">
+                    <span>Label (optional)</span>
+                    <input type="text" name="label" placeholder="e.g., Morning workout">
+                </label>
+            </div>
+
+            <!-- Row 2: Mode, Sound, Repeat -->
+            <div class="form-grid-3">
+                <label class="field">
+                    <span>Wake Mode</span>
+                    <select name="mode" id="modeSelect">
+                        <option value="gentle">🌿 Gentle</option>
+                        <option value="normal" selected>⏰ Normal</option>
+                        <option value="nuclear">🔥 Nuclear</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Alarm Sound</span>
+                    <select name="sound" id="soundSelect">
+                        <optgroup label="🌿 Gentle" data-mode="gentle">
+                            {% for sound in sounds.gentle %}
+                            <option value="{{ sound.path }}">{{ sound.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="⏰ Normal" data-mode="normal">
+                            {% for sound in sounds.normal %}
+                            <option value="{{ sound.path }}">{{ sound.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="🔥 Nuclear" data-mode="nuclear">
+                            {% for sound in sounds.nuclear %}
+                            <option value="{{ sound.path }}">{{ sound.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Repeat</span>
+                    <select name="repeat" id="repeatSelect">
+                        <option value="once">Once (No repeat)</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekdays">Weekdays (Mon-Fri)</option>
+                        <option value="weekends">Weekends (Sat-Sun)</option>
+                        <option value="weekly">Every Week</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="custom">Custom Days</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- Day Selector (for custom repeat) -->
+            <div id="daySelector" class="day-selector hidden">
+                <label class="day-check"><input type="checkbox" name="days" value="mon"><span>Mon</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="tue"><span>Tue</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="wed"><span>Wed</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="thu"><span>Thu</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="fri"><span>Fri</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="sat"><span>Sat</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="sun"><span>Sun</span></label>
+            </div>
+
+            <!-- Sound Preview -->
+            <div class="sound-preview-row">
+                <button type="button" class="btn preview-btn" onclick="previewSound()">🔊 Preview Sound</button>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Smart Home Devices -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-number">2</span>
+                <div>
+                    <div class="section-label">🏠 Smart Home Devices</div>
+                    <div class="section-desc">Add devices to control when alarm triggers</div>
+                </div>
+            </div>
+
+            <!-- Added Devices List -->
+            <div id="addedDevices" class="added-devices">
+                <!-- Devices will be added here dynamically -->
+            </div>
+
+            <!-- Add Device Button -->
+            <button type="button" class="add-device-btn" onclick="openDevicePicker()">
+                <span class="add-icon">+</span>
+                <span>Add Device</span>
+            </button>
+        </div>
+
+        <!-- SECTION 3: Additional Actions -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-number">3</span>
+                <div>
+                    <div class="section-label">🎯 Additional Actions</div>
+                    <div class="section-desc">Extra automations when alarm triggers</div>
+                </div>
+            </div>
+
+            <!-- Added Actions List -->
+            <div id="addedActions" class="added-actions">
+                <!-- Actions will be added here dynamically -->
+            </div>
+
+            <!-- Add Action Button -->
+            <button type="button" class="add-action-btn" onclick="openActionPicker()">
+                <span class="add-icon">+</span>
+                <span>Add Action</span>
+            </button>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-actions">
+            <button type="button" class="btn" onclick="previewAlarm()">👁️ Preview</button>
+            <button type="submit" class="btn primary large">✓ Create Alarm</button>
+        </div>
+    </form>
+</section>
+
+<!-- Device Picker Modal -->
+<div id="devicePickerModal" class="modal-overlay hidden">
+    <div class="modal-content device-picker">
+        <div class="modal-header">
+            <h3>Add Device</h3>
+            <button type="button" class="modal-close" onclick="closeDevicePicker()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="deviceCategoriesContainer" class="device-categories">
+                <div class="loading-spinner">Loading devices...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Device Settings Sidebar -->
+<div id="deviceSettingsSidebar" class="sidebar-overlay hidden">
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <button type="button" class="sidebar-back" onclick="closeDeviceSettings()">← Back</button>
+            <h3 id="sidebarDeviceName">Device Settings</h3>
+        </div>
+        <div class="sidebar-body" id="sidebarBody">
+            <!-- Dynamic content based on device type -->
+        </div>
+        <div class="sidebar-footer">
+            <button type="button" class="btn" onclick="closeDeviceSettings()">Cancel</button>
+            <button type="button" class="btn primary" onclick="saveDeviceSettings()">Add Device</button>
+        </div>
+    </div>
+</div>
+
+<!-- Action Picker Modal -->
+<div id="actionPickerModal" class="modal-overlay hidden">
+    <div class="modal-content action-picker">
+        <div class="modal-header">
+            <h3>Add Action</h3>
+            <button type="button" class="modal-close" onclick="closeActionPicker()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="action-categories">
+                <div class="action-category">
+                    <div class="category-header">📢 Communication</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option"
+                            onclick="selectAction('voice', '🔊', 'Voice Announcement')">
+                            <span class="action-icon">🔊</span><span class="action-name">Voice Announcement</span>
+                        </button>
+                        <button type="button" class="action-option"
+                            onclick="selectAction('whatsapp', '📱', 'WhatsApp Message')">
+                            <span class="action-icon">📱</span><span class="action-name">WhatsApp Message</span>
+                        </button>
+                        <button type="button" class="action-option"
+                            onclick="selectAction('telegram', '📲', 'Telegram Message')">
+                            <span class="action-icon">📲</span><span class="action-name">Telegram Message</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-category">
+                    <div class="category-header">🔁 Escalation</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option featured"
+                            onclick="selectAction('spam', '🚨', 'Spam Mode')">
+                            <span class="action-icon">🚨</span><span class="action-name">Spam Mode</span><span
+                                class="action-badge">NEW</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-category">
+                    <div class="category-header">🎵 Media</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option" onclick="selectAction('music', '🎵', 'Play Music')">
+                            <span class="action-icon">🎵</span><span class="action-name">Play Music</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-category">
+                    <div class="category-header">📅 Information</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option"
+                            onclick="selectAction('weather', '🌤️', 'Weather Report')">
+                            <span class="action-icon">🌤️</span><span class="action-name">Weather Report</span>
+                        </button>
+                        <button type="button" class="action-option"
+                            onclick="selectAction('quote', '💬', 'Motivational Quote')">
+                            <span class="action-icon">💬</span><span class="action-name">Motivational Quote</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Settings Sidebar -->
+<div id="actionSettingsSidebar" class="sidebar-overlay hidden">
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <button type="button" class="sidebar-back" onclick="closeActionSettings()">← Back</button>
+            <h3 id="sidebarActionName">Action Settings</h3>
+        </div>
+        <div class="sidebar-body" id="actionSidebarBody"></div>
+        <div class="sidebar-footer">
+            <button type="button" class="btn" onclick="closeActionSettings()">Cancel</button>
+            <button type="button" class="btn primary" onclick="saveActionSettings()">Add Action</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form Structure */
+    .alarm-form {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-section {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .section-number {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent);
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .section-label {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .section-desc {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    /* Form Grid */
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .field span {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+    }
+
+    .field input,
+    .field select {
+        padding: 10px 12px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    .field input:focus,
+    .field select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    /* Day Selector */
+    .day-selector {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .day-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .day-check:has(input:checked) {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .day-check input {
+        display: none;
+    }
+
+    .day-check span {
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    /* Sound Preview */
+    .sound-preview-row {
+        margin-top: 16px;
+    }
+
+    .preview-btn {
+        background: var(--bg-primary);
+    }
+
+    /* Added Devices/Actions */
+    .added-devices,
+    .added-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .added-device,
+    .added-action {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+    }
+
+    .added-device .device-icon,
+    .added-action .action-icon {
+        font-size: 1.5rem;
+    }
+
+    .added-device .device-info,
+    .added-action .action-info {
+        flex: 1;
+    }
+
+    .added-device .device-name,
+    .added-action .action-name {
+        font-weight: 500;
+        color: var(--text);
+    }
+
+    .added-device .device-setting,
+    .added-action .action-setting {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .remove-device,
+    .remove-action {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 4px 8px;
+        font-size: 18px;
+        transition: color 0.2s;
+    }
+
+    .remove-device:hover,
+    .remove-action:hover {
+        color: var(--danger);
+    }
+
+    /* Add Buttons */
+    .add-device-btn,
+    .add-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px;
+        background: transparent;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-md);
+        color: var(--muted);
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .add-device-btn:hover,
+    .add-action-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .add-icon {
+        font-size: 20px;
+        font-weight: 300;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn.large {
+        padding: 12px 24px;
+        font-size: 15px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+        transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+        background: var(--border);
+        color: var(--text);
+    }
+
+    .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    /* Device/Action Categories */
+    .device-categories,
+    .action-categories {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .device-category,
+    .action-category {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .category-header {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+    }
+
+    .device-options,
+    .action-options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .device-option,
+    .action-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+        color: var(--text);
+    }
+
+    .device-option:hover,
+    .action-option:hover {
+        border-color: var(--accent);
+        background: rgba(255, 107, 157, 0.05);
+    }
+
+    .device-option.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .device-icon,
+    .action-icon {
+        font-size: 1.2rem;
+    }
+
+    .device-name,
+    .action-name {
+        flex: 1;
+        font-size: 14px;
+    }
+
+    .device-status {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: var(--radius-full);
+    }
+
+    .device-status.online {
+        background: rgba(46, 160, 67, 0.15);
+        color: var(--success);
+    }
+
+    .device-status.offline {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--danger);
+    }
+
+    .action-option.featured {
+        border-color: var(--accent);
+        background: rgba(255, 107, 157, 0.08);
+    }
+
+    .action-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+        background: var(--accent);
+        color: white;
+        border-radius: var(--radius-full);
+        font-weight: 600;
+    }
+
+    /* Sidebar */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: flex-end;
+        z-index: 1001;
+        backdrop-filter: blur(4px);
+    }
+
+    .sidebar-content {
+        width: 100%;
+        max-width: 400px;
+        background: var(--bg-secondary);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-back {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .sidebar-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .sidebar-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .sidebar-footer {
+        display: flex;
+        gap: 12px;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+    }
+
+    .sidebar-footer .btn {
+        flex: 1;
+    }
+
+    /* Setting Groups */
+    .setting-group {
+        margin-bottom: 20px;
+    }
+
+    .setting-label {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .toggle-row:last-child {
+        border-bottom: none;
+    }
+
+    .toggle-label {
+        font-size: 14px;
+        color: var(--text);
+    }
+
+    /* Alarm List */
+    .alarm-list {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .alarm-item {
+        display: grid;
+        grid-template-columns: 80px 1fr auto auto;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        transition: all 0.2s;
+    }
+
+    .alarm-item:hover {
+        border-color: var(--accent);
+    }
+
+    .alarm-time {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .alarm-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .alarm-date {
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    .alarm-label {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .alarm-mode {
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .alarm-mode.gentle {
+        background: var(--ok-subtle);
+        color: var(--ok);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .alarm-mode.normal {
+        background: var(--warn-subtle);
+        color: var(--warn);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .alarm-mode.nuclear {
+        background: var(--danger-subtle);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .alarm-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .alarm-toggle {
+        width: 44px;
+        height: 24px;
+        background: var(--border);
+        border: none;
+        border-radius: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .alarm-toggle::after {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        top: 3px;
+        left: 3px;
+        transition: all 0.3s;
+    }
+
+    .alarm-toggle.enabled {
+        background: var(--accent);
+    }
+
+    .alarm-toggle.enabled::after {
+        left: 23px;
+    }
+
+    .btn-icon {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 6px 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-icon:hover {
+        border-color: var(--danger);
+        background: var(--danger-subtle);
+    }
+
+    /* Card Header Row */
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-close-form {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 8px 16px;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .btn-close-form:hover {
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--muted);
+    }
+
+    .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+    }
+
+    .empty-state .title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+    }
+
+    /* Utilities */
+    .hidden {
+        display: none !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .alarm-item {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .alarm-controls {
+            justify-content: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // State
+    let addedDevices = [];
+    let addedActions = [];
+    let currentDevice = null;
+    let currentAction = null;
+
+    // Toggle Create Form
+    function toggleCreateForm() {
+        const section = document.getElementById('createAlarmSection');
+        const isHidden = section.classList.contains('hidden');
+
+        section.classList.toggle('hidden');
+
+        if (isHidden) {
+            // Opening form - reset to "Add New" mode
+            const form = document.getElementById('alarmForm');
+            form.reset();
+            form.dataset.editId = '';
+
+            // Clear devices and actions
+            addedDevices = [];
+            addedActions = [];
+            renderDevices();
+            renderActions();
+
+            // Reset title
+            document.querySelector('#createAlarmSection .card-title').textContent = 'Add New Alarm';
+
+            // Scroll to form
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    // Day selector toggle
+    document.getElementById('repeatSelect').addEventListener('change', function () {
+        const daySelector = document.getElementById('daySelector');
+        if (this.value === 'custom') {
+            daySelector.classList.remove('hidden');
+        } else {
+            daySelector.classList.add('hidden');
+        }
+    });
+
+    // Mode filter for sounds - show only matching category
+    function filterSoundsByMode(mode) {
+        const soundSelect = document.getElementById('soundSelect');
+        const optgroups = soundSelect.querySelectorAll('optgroup');
+
+        optgroups.forEach(og => {
+            const ogMode = og.getAttribute('data-mode');
+            if (ogMode === mode) {
+                og.style.display = '';
+                // Select first option in this group
+                const firstOption = og.querySelector('option');
+                if (firstOption) {
+                    soundSelect.value = firstOption.value;
+                }
+            } else {
+                og.style.display = 'none';
+            }
+        });
+    }
+
+    // Apply filter on mode change
+    document.getElementById('modeSelect').addEventListener('change', function () {
+        filterSoundsByMode(this.value);
+    });
+
+    // Apply initial filter on page load
+    filterSoundsByMode(document.getElementById('modeSelect').value);
+
+    // Preview sound
+    // Audio player for sound preview
+    let previewAudio = null;
+
+    function previewSound() {
+        const soundPath = document.getElementById('soundSelect').value;
+        if (!soundPath) {
+            showToast('Please select a sound first', 'error');
+            return;
+        }
+
+        // Stop any playing audio
+        if (previewAudio) {
+            previewAudio.pause();
+            previewAudio = null;
+        }
+
+        // Play the sound
+        previewAudio = new Audio(soundPath);
+        previewAudio.play()
+            .then(() => {
+                showToast('🔊 Playing: ' + soundPath.split('/').pop(), 'success');
+                // Auto-stop after 5 seconds
+                setTimeout(() => {
+                    if (previewAudio) {
+                        previewAudio.pause();
+                        previewAudio = null;
+                    }
+                }, 5000);
+            })
+            .catch(err => {
+                console.error('Audio error:', err);
+                showToast('Failed to play sound', 'error');
+            });
+    }
+
+    // Preview alarm
+    function previewAlarm() {
+        const form = document.getElementById('alarmForm');
+        const formData = new FormData(form);
+        const time = formData.get('time') || '--:--';
+        const mode = formData.get('mode') || 'normal';
+
+        let message = `Alarm at ${time} (${mode})`;
+        if (addedDevices.length > 0) {
+            message += `\nDevices: ${addedDevices.map(d => d.name).join(', ')}`;
+        }
+        if (addedActions.length > 0) {
+            message += `\nActions: ${addedActions.map(a => a.name).join(', ')}`;
+        }
+
+        alert(message);
+    }
+
+    // ========== Device Picker ==========
+    let cachedDevices = null;
+
+    async function loadDevices() {
+        if (cachedDevices) return cachedDevices;
+        try {
+            const response = await fetch('/api/devices');
+            cachedDevices = await response.json();
+            return cachedDevices;
+        } catch (e) {
+            console.error('Failed to load devices:', e);
+            return { lights: [], ac: [], plugs: [], other: [] };
+        }
+    }
+
+    function renderDeviceCategory(title, icon, devices) {
+        if (!devices || devices.length === 0) return '';
+
+        const buttons = devices.map(d => {
+            const statusClass = d.online ? 'online' : 'offline';
+            const disabledClass = d.online ? '' : 'disabled';
+            const deviceData = JSON.stringify({
+                id: d.id,
+                icon: d.icon,
+                name: d.name,
+                type: d.type,
+                supports_brightness: d.supports_brightness,
+                supports_color: d.supports_color
+            }).replace(/"/g, '&quot;');
+
+            return `
+                <button type="button" class="device-option ${disabledClass}"
+                    ${d.online ? `onclick='selectDeviceFromData(${JSON.stringify(d).replace(/'/g, "\\'")})'` : ''}>
+                    <span class="device-icon">${d.icon}</span>
+                    <span class="device-name">${d.name}</span>
+                    <span class="device-status ${statusClass}">${d.online ? 'Online' : 'Offline'}</span>
+                </button>
+            `;
+        }).join('');
+
+        return `
+            <div class="device-category">
+                <div class="category-header">${icon} ${title}</div>
+                <div class="device-options">${buttons}</div>
+            </div>
+        `;
+    }
+
+    async function openDevicePicker() {
+        const modal = document.getElementById('devicePickerModal');
+        const container = document.getElementById('deviceCategoriesContainer');
+
+        modal.classList.remove('hidden');
+        container.innerHTML = '<div class="loading-spinner">Loading devices...</div>';
+
+        const devices = await loadDevices();
+
+        let html = '';
+        html += renderDeviceCategory('Lights', '💡', devices.lights);
+        html += renderDeviceCategory('Air Conditioning', '❄️', devices.ac);
+        html += renderDeviceCategory('Smart Plugs', '🔌', devices.plugs);
+        html += renderDeviceCategory('Other Devices', '📱', devices.other);
+
+        if (!html) {
+            html = '<div class="no-devices">No devices found. Make sure Tuya is configured.</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function closeDevicePicker() {
+        document.getElementById('devicePickerModal').classList.add('hidden');
+    }
+
+    function selectDeviceFromData(device) {
+        currentDevice = {
+            id: device.id,
+            icon: device.icon,
+            name: device.name,
+            type: device.type,
+            supports_brightness: device.supports_brightness,
+            supports_color: device.supports_color
+        };
+        closeDevicePicker();
+        openDeviceSettings();
+    }
+
+    function selectDevice(id, icon, name, type) {
+        currentDevice = { id, icon, name, type };
+        closeDevicePicker();
+        openDeviceSettings();
+    }
+
+    function openDeviceSettings() {
+        document.getElementById('sidebarDeviceName').textContent = currentDevice.name;
+        const body = document.getElementById('sidebarBody');
+
+        // Generate settings based on device type and capabilities
+        if (currentDevice.type === 'light') {
+            let brightnessHtml = '';
+            let colorHtml = '';
+
+            // Show brightness control if device supports it
+            if (currentDevice.supports_brightness !== false) {
+                brightnessHtml = `
+                    <div class="setting-group">
+                        <div class="setting-label">Brightness</div>
+                        <input type="range" id="deviceBrightness" min="1" max="100" value="100" style="width:100%">
+                        <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:4px"><span id="brightnessValue">100</span>%</div>
+                    </div>
+                `;
+            }
+
+            // Show color picker if device supports it
+            if (currentDevice.supports_color) {
+                colorHtml = `
+                    <div class="setting-group">
+                        <div class="setting-label">Color</div>
+                        <select id="deviceColor" style="width:100%;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+                            <option value="white">⚪ White</option>
+                            <option value="warm">🟡 Warm White</option>
+                            <option value="red">🔴 Red</option>
+                            <option value="orange">🟠 Orange</option>
+                            <option value="yellow">🟡 Yellow</option>
+                            <option value="green">🟢 Green</option>
+                            <option value="cyan">🔵 Cyan</option>
+                            <option value="blue">🔵 Blue</option>
+                            <option value="purple">🟣 Purple</option>
+                            <option value="pink">💗 Pink</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            body.innerHTML = `
+                <div class="setting-group">
+                    <div class="setting-label">Action</div>
+                    <select id="deviceAction" class="field-select" style="width:100%;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+                        <option value="on">Turn On</option>
+                        <option value="off">Turn Off</option>
+                    </select>
+                </div>
+                ${brightnessHtml}
+                ${colorHtml}
+            `;
+
+            // Set up brightness slider event
+            const brightnessSlider = document.getElementById('deviceBrightness');
+            if (brightnessSlider) {
+                brightnessSlider.oninput = function () {
+                    document.getElementById('brightnessValue').textContent = this.value;
+                };
+            }
+        } else if (currentDevice.type === 'ac') {
+            body.innerHTML = `
+                <div class="setting-group">
+                    <div class="setting-label">Action</div>
+                    <select id="deviceAction" style="width:100%;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+                        <option value="on">Turn On</option>
+                        <option value="off">Turn Off</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label">Temperature</div>
+                    <input type="range" id="deviceTemp" min="16" max="30" value="24" style="width:100%">
+                    <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:4px"><span id="tempValue">24</span>°C</div>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label">Mode</div>
+                    <select id="deviceMode" style="width:100%;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+                        <option value="cool">Cool</option>
+                        <option value="dry">Dry</option>
+                        <option value="fan">Fan Only</option>
+                    </select>
+                </div>
+            `;
+            document.getElementById('deviceTemp').oninput = function () {
+                document.getElementById('tempValue').textContent = this.value;
+            };
+        } else {
+            body.innerHTML = `
+                <div class="setting-group">
+                    <div class="setting-label">Action</div>
+                    <select id="deviceAction" style="width:100%;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+                        <option value="on">Turn On</option>
+                        <option value="off">Turn Off</option>
+                    </select>
+                </div>
+            `;
+        }
+
+        document.getElementById('deviceSettingsSidebar').classList.remove('hidden');
+    }
+
+    function closeDeviceSettings() {
+        document.getElementById('deviceSettingsSidebar').classList.add('hidden');
+        currentDevice = null;
+    }
+
+    function saveDeviceSettings() {
+        const action = document.getElementById('deviceAction')?.value || 'on';
+        let setting = action === 'on' ? 'Turn On' : 'Turn Off';
+
+        // Build device configuration based on type
+        const deviceConfig = {
+            ...currentDevice,
+            action
+        };
+
+        if (currentDevice.type === 'light') {
+            const brightnessEl = document.getElementById('deviceBrightness');
+            const colorEl = document.getElementById('deviceColor');
+
+            if (brightnessEl) {
+                deviceConfig.brightness = parseInt(brightnessEl.value);
+                setting += ` at ${brightnessEl.value}%`;
+            }
+            if (colorEl) {
+                deviceConfig.color = colorEl.value;
+                setting += ` (${colorEl.value})`;
+            }
+        } else if (currentDevice.type === 'ac') {
+            const tempEl = document.getElementById('deviceTemp');
+            const modeEl = document.getElementById('deviceMode');
+
+            if (tempEl) {
+                deviceConfig.temperature = parseInt(tempEl.value);
+                setting += ` at ${tempEl.value}°C`;
+            }
+            if (modeEl) {
+                deviceConfig.ac_mode = modeEl.value;
+                setting += ` (${modeEl.value})`;
+            }
+        }
+
+        deviceConfig.setting = setting;
+
+        addedDevices.push(deviceConfig);
+
+        renderDevices();
+        closeDeviceSettings();
+    }
+
+    function renderDevices() {
+        const deviceIcons = {
+            'light': '💡',
+            'ac': '❄️',
+            'plug': '🔌',
+            'other': '📱'
+        };
+
+        const container = document.getElementById('addedDevices');
+        container.innerHTML = addedDevices.map((d, i) => {
+            // Handle both new data (with icon/name/setting) and saved data (with type/device_id/action)
+            const icon = d.icon || deviceIcons[d.type] || '📱';
+            const name = d.name || d.device_name || d.device_id || 'Device';
+
+            // Build setting display
+            let setting = d.setting || '';
+            if (!setting) {
+                if (d.type === 'light' || d.type === 'ac') {
+                    setting = d.action || 'on';
+                    if (d.brightness) setting += ` (${d.brightness}%)`;
+                    if (d.color) setting += ` ${d.color}`;
+                    if (d.temperature) setting += ` ${d.temperature}°C`;
+                } else if (d.action) {
+                    setting = d.action;
+                } else {
+                    setting = 'Configured';
+                }
+            }
+
+            return `
+            <div class="added-device">
+                <span class="device-icon">${icon}</span>
+                <div class="device-info">
+                    <div class="device-name">${name}</div>
+                    <div class="device-setting">${setting}</div>
+                </div>
+                <button type="button" class="remove-device" onclick="removeDevice(${i})">×</button>
+            </div>
+        `}).join('');
+    }
+
+    function removeDevice(index) {
+        addedDevices.splice(index, 1);
+        renderDevices();
+    }
+
+    // ========== Action Picker ==========
+    function openActionPicker() {
+        document.getElementById('actionPickerModal').classList.remove('hidden');
+    }
+
+    function closeActionPicker() {
+        document.getElementById('actionPickerModal').classList.add('hidden');
+    }
+
+    function selectAction(id, icon, name) {
+        currentAction = { id, icon, name };
+        closeActionPicker();
+        openActionSettings();
+    }
+
+    function openActionSettings() {
+        document.getElementById('sidebarActionName').textContent = currentAction.name;
+        const body = document.getElementById('actionSidebarBody');
+
+        // Generate settings based on action type
+        if (currentAction.id === 'voice') {
+            body.innerHTML = `
+                <div class="setting-group">
+                    <div class="setting-label">Message</div>
+                    <textarea id="actionMessage" style="width:100%;height:100px;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical" placeholder="Enter announcement message...">Selamat pagi! Waktunya bangun!</textarea>
+                </div>
+            `;
+        } else if (currentAction.id === 'whatsapp' || currentAction.id === 'telegram') {
+            body.innerHTML = `
+                <div class="setting-group">
+                    <div class="setting-label">Recipient</div>
+                    <input type="text" id="actionRecipient" style="width:100%;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text)" placeholder="Phone number or username">
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label">Message</div>
+                    <textarea id="actionMessage" style="width:100%;height:100px;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical" placeholder="Enter message...">Hey, wake up! ⏰</textarea>
+                </div>
+            `;
+        } else if (currentAction.id === 'spam') {
+            body.innerHTML = `
+                <div class="setting-group">
+                    <div class="setting-label">Spam Message</div>
+                    <textarea id="actionMessage" style="width:100%;height:80px;padding:10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text);resize:vertical" placeholder="Message to spam...">BANGUN SEKARANG! ⏰</textarea>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-label">Spam Channels</div>
+                    <div class="setting-desc" style="margin-bottom:10px;color:var(--muted);font-size:0.85rem">Select where to spam (loops FOREVER until alarm dismissed!)</div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                            <input type="checkbox" id="channelTts" checked style="width:18px;height:18px;accent-color:var(--accent)">
+                            <span>🔊 Voice (TTS)</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                            <input type="checkbox" id="channelTelegram" style="width:18px;height:18px;accent-color:var(--accent)">
+                            <span>📲 Telegram</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                            <input type="checkbox" id="channelWhatsapp" style="width:18px;height:18px;accent-color:var(--accent)">
+                            <span>📱 WhatsApp</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-group" style="background:var(--warn-subtle);padding:12px;border-radius:8px;margin-top:10px">
+                    <div style="color:var(--warn);font-weight:600;font-size:0.9rem">⚠️ Warning</div>
+                    <div style="color:var(--muted);font-size:0.85rem;margin-top:4px">Spam akan terus berulang setiap 15 detik sampai alarm di-dismiss!</div>
+                </div>
+            `;
+        } else {
+            body.innerHTML = `
+                <div class="setting-group" style="text-align:center;padding:20px;color:var(--muted)">
+                    <p>This action has no additional settings.</p>
+                    <p>Click "Add Action" to continue.</p>
+                </div>
+            `;
+        }
+
+        document.getElementById('actionSettingsSidebar').classList.remove('hidden');
+    }
+
+    function closeActionSettings() {
+        document.getElementById('actionSettingsSidebar').classList.add('hidden');
+        currentAction = null;
+    }
+
+    function saveActionSettings() {
+        let setting = '';
+
+        if (currentAction.id === 'voice') {
+            const msg = document.getElementById('actionMessage')?.value || '';
+            setting = msg.substring(0, 30) + (msg.length > 30 ? '...' : '');
+        } else if (currentAction.id === 'whatsapp' || currentAction.id === 'telegram') {
+            setting = document.getElementById('actionRecipient')?.value || 'Not set';
+        } else if (currentAction.id === 'spam') {
+            // Get spam message
+            const msg = document.getElementById('actionMessage')?.value || 'BANGUN SEKARANG!';
+            // Get selected channels
+            const channels = [];
+            if (document.getElementById('channelTts')?.checked) channels.push('tts');
+            if (document.getElementById('channelTelegram')?.checked) channels.push('telegram');
+            if (document.getElementById('channelWhatsapp')?.checked) channels.push('whatsapp');
+
+            // Store full data in currentAction for later use
+            currentAction.message = msg;
+            currentAction.channels = channels.length > 0 ? channels : ['tts'];
+
+            // Display setting summary
+            setting = channels.join(', ').toUpperCase() || 'TTS';
+        } else {
+            setting = 'Enabled';
+        }
+
+        addedActions.push({
+            ...currentAction,
+            setting
+        });
+
+        renderActions();
+        closeActionSettings();
+    }
+
+    function renderActions() {
+        const actionInfo = {
+            'voice': { icon: '🎙️', name: 'Voice Announcement' },
+            'whatsapp': { icon: '📱', name: 'WhatsApp Notification' },
+            'telegram': { icon: '✈️', name: 'Telegram Notification' },
+            'weather': { icon: '🌤️', name: 'Weather Report' },
+            'music': { icon: '🎵', name: 'Play Music' },
+            'quote': { icon: '💬', name: 'Motivational Quote' },
+            'spam': { icon: '🔔', name: 'Spam Mode' }
+        };
+
+        const container = document.getElementById('addedActions');
+        container.innerHTML = addedActions.map((a, i) => {
+            // Handle both new data (with icon/name/setting) and saved data (with id and other props)
+            const info = actionInfo[a.id] || { icon: '⚙️', name: a.id || 'Action' };
+            const icon = a.icon || info.icon;
+            const name = a.name || info.name;
+
+            // Build setting display
+            let setting = a.setting || '';
+            if (!setting) {
+                if (a.id === 'voice' && a.message) {
+                    setting = a.message.length > 30 ? a.message.substring(0, 30) + '...' : a.message;
+                } else if ((a.id === 'whatsapp' || a.id === 'telegram') && a.recipient) {
+                    setting = `To: ${a.recipient}`;
+                    if (a.message) setting += ` - "${a.message.substring(0, 20)}..."`;
+                } else if (a.id === 'spam') {
+                    setting = `${a.count || 5}x every ${a.delay || 30}s`;
+                } else if (a.message) {
+                    setting = a.message.length > 40 ? a.message.substring(0, 40) + '...' : a.message;
+                } else {
+                    setting = 'Enabled';
+                }
+            }
+
+            return `
+            <div class="added-action">
+                <span class="action-icon">${icon}</span>
+                <div class="action-info">
+                    <div class="action-name">${name}</div>
+                    <div class="action-setting">${setting}</div>
+                </div>
+                <button type="button" class="remove-action" onclick="removeAction(${i})">×</button>
+            </div>
+        `}).join('');
+    }
+
+    function removeAction(index) {
+        addedActions.splice(index, 1);
+        renderActions();
+    }
+
+    // ========== Form Submit ==========
+    document.getElementById('alarmForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            time: formData.get('time'),
+            date: formData.get('date'),
+            label: formData.get('label'),
+            mode: formData.get('mode'),
+            sound: formData.get('sound'),
+            repeat: formData.get('repeat'),
+            devices: addedDevices,
+            actions: addedActions,
+            enabled: true
+        };
+
+        // Get custom days if selected
+        if (data.repeat === 'custom') {
+            data.days = formData.getAll('days');
+        }
+
+        // Check if editing existing alarm
+        const editId = this.dataset.editId;
+        const isEdit = !!editId;
+
+        // If editing, delete old alarm first
+        const submitAlarm = () => {
+            fetch('/api/alarms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        return r.json().then(err => { throw err; });
+                    }
+                    return r.json();
+                })
+                .then(result => {
+                    if (result.success) {
+                        showToast(isEdit ? 'Alarm updated!' : 'Alarm created!', 'success');
+                        this.dataset.editId = ''; // Clear edit mode
+                        document.querySelector('#createAlarmSection .card-title').textContent = 'Add New Alarm';
+                        toggleCreateForm(); // Close form
+                        setTimeout(() => location.reload(), 800);
+                    } else {
+                        showToast(result.detail || result.error || 'Failed to save alarm', 'error');
+                    }
+                })
+                .catch(e => {
+                    console.error('Save alarm error:', e);
+                    const msg = e.detail ? (Array.isArray(e.detail) ? e.detail[0].msg : e.detail) : 'Error saving alarm';
+                    showToast(msg, 'error');
+                });
+        };
+
+        if (isEdit) {
+            // Delete old alarm first, then create new one
+            fetch(`/api/alarms/${editId}`, { method: 'DELETE' })
+                .then(() => submitAlarm())
+                .catch(e => showToast('Failed to update alarm', 'error'));
+        } else {
+            submitAlarm();
+        }
+    });
+
+    // ========== Alarm Management ==========
+    function toggleAlarm(id, btn) {
+        fetch(`/api/alarms/${id}/toggle`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    btn.classList.toggle('enabled');
+                    const isEnabled = btn.classList.contains('enabled');
+                    showToast(isEnabled ? 'Alarm enabled' : 'Alarm disabled', 'success');
+                } else {
+                    showToast('Failed to toggle alarm', 'error');
+                }
+            })
+            .catch(e => showToast('Failed to toggle alarm', 'error'));
+    }
+
+    function editAlarm(id) {
+        // Fetch alarm data and open edit form
+        fetch(`/api/alarms/${id}`)
+            .then(r => r.json())
+            .then(alarm => {
+                // Show create form for editing
+                document.getElementById('createAlarmSection').classList.remove('hidden');
+
+                // Fill form with alarm data
+                const form = document.getElementById('alarmForm');
+                form.elements['time'].value = alarm.time || '';
+                form.elements['date'].value = alarm.date || '';
+                form.elements['label'].value = alarm.label || '';
+                form.elements['mode'].value = alarm.mode || 'normal';
+                form.elements['sound'].value = alarm.sound || '';
+                form.elements['repeat'].value = alarm.repeat || 'once';
+
+                // Update form title
+                document.querySelector('#createAlarmSection .card-title').textContent = 'Edit Alarm';
+
+                // Store editing alarm ID
+                form.dataset.editId = id;
+
+                // Load devices and actions
+                addedDevices = alarm.devices || [];
+                addedActions = alarm.actions || [];
+                renderDevices();
+                renderActions();
+
+                // Scroll to form
+                document.getElementById('createAlarmSection').scrollIntoView({ behavior: 'smooth' });
+
+                showToast('Editing alarm...', 'success');
+            })
+            .catch(e => showToast('Failed to load alarm data', 'error'));
+    }
+
+    function deleteAlarm(id) {
+        if (confirm('Delete this alarm?')) {
+            fetch(`/api/alarms/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`alarm-${id}`).remove();
+                        showToast('Alarm deleted', 'success');
+                    }
+                })
+                .catch(e => showToast('Failed to delete alarm', 'error'));
+        }
+    }
+</script>
+{% endblock %}

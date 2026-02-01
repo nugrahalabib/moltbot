@@ -1,0 +1,1841 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Routines - Shila Wake System{% endblock %}
+{% block page_title %}Routines{% endblock %}
+{% block page_sub %}Create automation presets with smart home control{% endblock %}
+
+{% block content %}
+<!-- Your Routines -->
+<section class="card" style="margin-top: 8px;">
+    <div class="card-header-row">
+        <div>
+            <div class="card-title">Your Routines</div>
+            <div class="card-sub">{{ routines|length }} routines configured</div>
+        </div>
+        <button type="button" class="btn primary" onclick="toggleCreateForm()">+ Create New Routine</button>
+    </div>
+
+    <div class="routines-list">
+        {% if routines %}
+        {% for routine in routines %}
+        <div class="routine-item" id="routine-{{ routine.id }}">
+            <div class="routine-icon {{ routine.color }}">{{ routine.icon }}</div>
+            <div class="routine-info">
+                <div class="routine-name">{{ routine.name }}</div>
+                <div class="routine-schedule"> {{ routine.trigger_time }} {{ routine.repeat }}</div>
+            </div>
+            <div class="routine-devices">
+                {% for device in routine.devices[:4] %}
+                <span class="device-chip">{{ device }}</span>
+                {% endfor %}
+                {% if routine.devices|length > 4 %}
+                <span class="device-chip more">+{{ routine.devices|length - 4 }}</span>
+                {% endif %}
+            </div>
+            <div class="routine-controls">
+                <button class="btn-trigger" onclick="triggerRoutine('{{ routine.id }}')">▶ Run</button>
+                <button class="btn-edit" onclick="editRoutine('{{ routine.id }}')">✏️</button>
+                <button class="btn-delete" onclick="deleteRoutine('{{ routine.id }}')">🗑️</button>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">🎛️</div>
+            <div class="title">No routines yet</div>
+            <p>Click "Create New Routine" to get started</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Create New Routine (Hidden by default) -->
+<section id="createRoutineSection" class="card section-gap hidden">
+    <div class="card-header-row">
+        <div>
+            <div class="card-title">Create New Routine</div>
+            <div class="card-sub">Build custom automation with alarm schedule and device actions</div>
+        </div>
+        <button type="button" class="btn-close-form" onclick="toggleCreateForm()">× Close</button>
+    </div>
+
+    <form id="routineForm" class="routine-form">
+        <!-- SECTION 1: Basic Info & Schedule -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-number">1</span>
+                <div>
+                    <div class="section-label">Basic Info & Schedule</div>
+                    <div class="section-desc">Name your routine and configure the alarm trigger</div>
+                </div>
+            </div>
+
+            <!-- Row 1: Routine Name, Icon -->
+            <div class="form-row-routine">
+                <label class="field name-field">
+                    <span>Routine Name</span>
+                    <input type="text" name="name" placeholder="e.g., Morning Routine" required>
+                </label>
+                <label class="field icon-field">
+                    <span>Icon</span>
+                    <select name="icon">
+                        <option value="🌅">🌅 Sunrise</option>
+                        <option value="💼">💼 Work</option>
+                        <option value="🌙">🌙 Night</option>
+                        <option value="🎬">🎬 Movie</option>
+                        <option value="🏃">🏃 Exercise</option>
+                        <option value="📚">📚 Study</option>
+                        <option value="🎮">🎮 Gaming</option>
+                        <option value="🧘">🧘 Relax</option>
+                        <option value="💤">💤 Sleep</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- Description -->
+            <label class="field description-field">
+                <span>Description (optional)</span>
+                <input type="text" name="description" placeholder="Brief description of what this routine does...">
+            </label>
+
+            <div class="form-divider"></div>
+
+            <!-- Row 2: Time, Date, Label (like alarms) -->
+            <div class="form-grid-3">
+                <label class="field">
+                    <span>Time</span>
+                    <input type="time" name="trigger_time" required>
+                </label>
+                <label class="field">
+                    <span>Date</span>
+                    <input type="date" name="trigger_date" required>
+                </label>
+                <label class="field">
+                    <span>Label (optional)</span>
+                    <input type="text" name="label" placeholder="e.g., Work day start">
+                </label>
+            </div>
+
+            <!-- Row 3: Mode, Sound, Repeat (like alarms) -->
+            <div class="form-grid-3">
+                <label class="field">
+                    <span>Wake Mode</span>
+                    <select name="mode">
+                        <option value="gentle">🌿 Gentle</option>
+                        <option value="normal" selected>⏰ Normal</option>
+                        <option value="nuclear">🔥 Nuclear</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Alarm Sound</span>
+                    <select name="sound" id="soundSelect">
+                        <optgroup label="🌿 Gentle">
+                            {% for sound in sounds.gentle %}
+                            <option value="{{ sound.path }}">{{ sound.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="⏰ Normal">
+                            {% for sound in sounds.normal %}
+                            <option value="{{ sound.path }}">{{ sound.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="🔥 Nuclear">
+                            {% for sound in sounds.nuclear %}
+                            <option value="{{ sound.path }}">{{ sound.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Repeat</span>
+                    <select name="repeat" id="repeatSelect">
+                        <option value="once">Once (No repeat)</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekdays">Weekdays (Mon-Fri)</option>
+                        <option value="weekends">Weekends (Sat-Sun)</option>
+                        <option value="weekly">Every Week</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="custom">Custom Days</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- Day Selector (for custom repeat) -->
+            <div id="daySelector" class="day-selector hidden">
+                <label class="day-check"><input type="checkbox" name="days" value="mon"><span>Mon</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="tue"><span>Tue</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="wed"><span>Wed</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="thu"><span>Thu</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="fri"><span>Fri</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="sat"><span>Sat</span></label>
+                <label class="day-check"><input type="checkbox" name="days" value="sun"><span>Sun</span></label>
+            </div>
+
+            <!-- Sound Preview -->
+            <div class="sound-preview-row">
+                <button type="button" class="btn preview-btn" onclick="previewSound()">🔊 Preview Sound</button>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Smart Home Devices -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-number">2</span>
+                <div>
+                    <div class="section-label">🏠 Smart Home Devices</div>
+                    <div class="section-desc">Add devices to control when routine triggers</div>
+                </div>
+            </div>
+
+            <!-- Added Devices List -->
+            <div id="addedDevices" class="added-devices">
+                <!-- Devices will be added here dynamically -->
+            </div>
+
+            <!-- Add Device Button -->
+            <button type="button" class="add-device-btn" onclick="openDevicePicker()">
+                <span class="add-icon">+</span>
+                <span>Add Device</span>
+            </button>
+        </div>
+
+        <!-- SECTION 3: Additional Actions -->
+        <div class="form-section">
+            <div class="section-header">
+                <span class="section-number">3</span>
+                <div>
+                    <div class="section-label">🎯 Additional Actions</div>
+                    <div class="section-desc">Extra automations when routine triggers</div>
+                </div>
+            </div>
+
+            <!-- Added Actions List -->
+            <div id="addedActions" class="added-actions">
+                <!-- Actions will be added here dynamically -->
+            </div>
+
+            <!-- Add Action Button -->
+            <button type="button" class="add-action-btn" onclick="openActionPicker()">
+                <span class="add-icon">+</span>
+                <span>Add Action</span>
+            </button>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-actions">
+            <button type="button" class="btn" onclick="previewRoutine()">👁️ Preview</button>
+            <button type="submit" class="btn primary large">✓ Create Routine</button>
+        </div>
+    </form>
+</section>
+
+<!-- Device Picker Modal -->
+<div id="devicePickerModal" class="modal-overlay hidden">
+    <div class="modal-content device-picker">
+        <div class="modal-header">
+            <h3>Add Device</h3>
+            <button type="button" class="modal-close" onclick="closeDevicePicker()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="device-categories">
+                <!-- Lights -->
+                <div class="device-category">
+                    <div class="category-header">💡 Lights</div>
+                    <div class="device-options">
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('lampu_meja', '💡', 'Lampu Meja', 'light')">
+                            <span class="device-icon">💡</span>
+                            <span class="device-name">Lampu Meja</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('soft_box_1', '💡', 'Soft Box 1', 'light')">
+                            <span class="device-icon">💡</span>
+                            <span class="device-name">Soft Box 1</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('soft_box_2', '💡', 'Soft Box 2', 'light')">
+                            <span class="device-icon">💡</span>
+                            <span class="device-name">Soft Box 2</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('strip_meja', '💡', 'Strip Meja', 'light')">
+                            <span class="device-icon">💡</span>
+                            <span class="device-name">Strip Meja</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('strip_dinding', '💡', 'Strip Dinding', 'light')">
+                            <span class="device-icon">💡</span>
+                            <span class="device-name">Strip Dinding</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AC -->
+                <div class="device-category">
+                    <div class="category-header">❄️ Air Conditioning</div>
+                    <div class="device-options">
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('ac_studio', '❄️', 'AC Studio', 'ac')">
+                            <span class="device-icon">❄️</span>
+                            <span class="device-name">AC Studio</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Plugs -->
+                <div class="device-category">
+                    <div class="category-header">🔌 Smart Plugs</div>
+                    <div class="device-options">
+                        <button type="button" class="device-option"
+                            onclick="selectDevice('lampu_tidur', '🔌', 'Lampu Tidur', 'plug')">
+                            <span class="device-icon">🔌</span>
+                            <span class="device-name">Lampu Tidur</span>
+                            <span class="device-status online">Online</span>
+                        </button>
+                        <button type="button" class="device-option disabled">
+                            <span class="device-icon">🖥️</span>
+                            <span class="device-name">Monitor</span>
+                            <span class="device-status offline">Offline</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Device Settings Sidebar -->
+<div id="deviceSettingsSidebar" class="sidebar-overlay hidden">
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <button type="button" class="sidebar-back" onclick="closeDeviceSettings()">← Back</button>
+            <h3 id="sidebarDeviceName">Device Settings</h3>
+        </div>
+        <div class="sidebar-body" id="sidebarBody">
+            <!-- Dynamic content based on device type -->
+        </div>
+        <div class="sidebar-footer">
+            <button type="button" class="btn" onclick="closeDeviceSettings()">Cancel</button>
+            <button type="button" class="btn primary" onclick="saveDeviceSettings()">Add Device</button>
+        </div>
+    </div>
+</div>
+
+<!-- Action Picker Modal -->
+<div id="actionPickerModal" class="modal-overlay hidden">
+    <div class="modal-content action-picker">
+        <div class="modal-header">
+            <h3>Add Action</h3>
+            <button type="button" class="modal-close" onclick="closeActionPicker()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="action-categories">
+                <div class="action-category">
+                    <div class="category-header">📢 Communication</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option"
+                            onclick="selectAction('voice', '', 'Voice Announcement')">
+                            <span class="action-icon"></span><span class="action-name">Voice Announcement</span>
+                        </button>
+                        <button type="button" class="action-option"
+                            onclick="selectAction('whatsapp', '📱', 'WhatsApp Message')">
+                            <span class="action-icon">📱</span><span class="action-name">WhatsApp Message</span>
+                        </button>
+                        <button type="button" class="action-option"
+                            onclick="selectAction('telegram', '', 'Telegram Message')">
+                            <span class="action-icon">📲</span><span class="action-name">Telegram Message</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-category">
+                    <div class="category-header">🔁 Escalation</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option featured"
+                            onclick="selectAction('spam', '', 'Spam Mode')">
+                            <span class="action-icon"></span><span class="action-name">Spam Mode</span><span
+                                class="action-badge">NEW</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-category">
+                    <div class="category-header"> Media</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option" onclick="selectAction('music', '🎵', 'Play Music')">
+                            <span class="action-icon"></span><span class="action-name">Play Music</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-category">
+                    <div class="category-header">📅 Information</div>
+                    <div class="action-options">
+                        <button type="button" class="action-option"
+                            onclick="selectAction('weather', '', 'Weather Report')">
+                            <span class="action-icon">🌤️</span><span class="action-name">Weather Report</span>
+                        </button>
+                        <button type="button" class="action-option"
+                            onclick="selectAction('quote', '💬', 'Motivational Quote')">
+                            <span class="action-icon"></span><span class="action-name">Motivational Quote</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Settings Sidebar -->
+<div id="actionSettingsSidebar" class="sidebar-overlay hidden">
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <button type="button" class="sidebar-back" onclick="closeActionSettings()">← Back</button>
+            <h3 id="sidebarActionName">Action Settings</h3>
+        </div>
+        <div class="sidebar-body" id="actionSidebarBody"></div>
+        <div class="sidebar-footer">
+            <button type="button" class="btn" onclick="closeActionSettings()">Cancel</button>
+            <button type="button" class="btn primary" onclick="saveActionSettings()">Add Action</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form Structure */
+    .routine-form {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-section {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .section-number {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent);
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .section-label {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-strong);
+    }
+
+    .section-desc {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    /* Form Grids */
+    .form-row-routine {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .description-field {
+        margin-bottom: 0;
+    }
+
+    .form-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 20px 0;
+    }
+
+    /* Field Styling */
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .field span {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--muted);
+    }
+
+    .field input,
+    .field select {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--secondary);
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    .field input:focus,
+    .field select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    /* Day Selector */
+    .day-selector {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .day-check {
+        cursor: pointer;
+    }
+
+    .day-check input {
+        display: none;
+    }
+
+    .day-check span {
+        display: block;
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .day-check input:checked+span {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Sound Preview */
+    .sound-preview-row {
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .preview-btn {
+        background: var(--secondary);
+    }
+
+    /* Added Devices */
+    .added-devices {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .added-device-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+    }
+
+    .added-device-icon {
+        font-size: 1.5rem;
+    }
+
+    .added-device-info {
+        flex: 1;
+    }
+
+    .added-device-name {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .added-device-settings {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .added-device-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .device-action-btn {
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        background: var(--secondary);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+
+    .device-action-btn:hover {
+        border-color: var(--border-strong);
+    }
+
+    .device-action-btn.remove:hover {
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    /* Add Device Button */
+    .add-device-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 16px;
+        border: 2px dashed var(--border);
+        background: transparent;
+        border-radius: var(--radius-md);
+        color: var(--muted);
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .add-device-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .add-icon {
+        font-size: 20px;
+        font-weight: 300;
+    }
+
+    /* Additional Actions */
+    .additional-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .action-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+
+    .action-item:hover {
+        border-color: var(--border-strong);
+    }
+
+    .action-item input[type="checkbox"] {
+        display: none;
+    }
+
+    .action-icon {
+        font-size: 1.3rem;
+    }
+
+    .action-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .action-name {
+        font-weight: 500;
+        min-width: 140px;
+        font-size: 14px;
+    }
+
+    .action-input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--secondary);
+        color: var(--text);
+        font-size: 13px;
+    }
+
+    .notify-channels {
+        display: flex;
+        gap: 16px;
+    }
+
+    .mini-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn.large {
+        padding: 12px 32px;
+        font-size: 15px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .modal-body {
+        padding: 16px 20px;
+        overflow-y: auto;
+    }
+
+    /* Device Categories */
+    .device-category {
+        margin-bottom: 20px;
+    }
+
+    .device-category:last-child {
+        margin-bottom: 0;
+    }
+
+    .category-header {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+
+    .device-options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .device-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+        width: 100%;
+    }
+
+    .device-option:hover:not(.disabled) {
+        border-color: var(--accent);
+        background: var(--bg-elevated);
+    }
+
+    .device-option.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .device-option .device-icon {
+        font-size: 1.2rem;
+    }
+
+    .device-option .device-name {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .device-option .device-status {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: var(--radius-full);
+    }
+
+    .device-status.online {
+        background: var(--ok-subtle);
+        color: var(--ok);
+    }
+
+    .device-status.offline {
+        background: var(--danger-subtle);
+        color: var(--danger);
+    }
+
+    /* Sidebar */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1001;
+        backdrop-filter: blur(4px);
+    }
+
+    .sidebar-content {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 380px;
+        background: var(--card);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        animation: slideIn 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-back {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    .sidebar-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .sidebar-footer {
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    /* Settings Controls */
+    .settings-group {
+        margin-bottom: 20px;
+    }
+
+    .settings-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .power-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .power-btn {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid var(--border);
+        background: var(--secondary);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .power-btn.on.active {
+        background: var(--ok);
+        border-color: var(--ok);
+        color: white;
+    }
+
+    .power-btn.off.active {
+        background: var(--danger);
+        border-color: var(--danger);
+        color: white;
+    }
+
+    .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .slider-row input[type="range"] {
+        flex: 1;
+        appearance: none;
+        height: 8px;
+        background: var(--border);
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .slider-row input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .slider-value {
+        min-width: 45px;
+        text-align: right;
+        font-weight: 600;
+    }
+
+    .color-select,
+    .mode-select,
+    .temp-select,
+    .fan-select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--secondary);
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    /* Routines List */
+    .routines-list {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .routine-item {
+        display: grid;
+        grid-template-columns: 48px 1fr auto auto;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+    }
+
+    .routine-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border-radius: var(--radius-md);
+        background: var(--secondary);
+    }
+
+    .routine-name {
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .routine-schedule {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .routine-devices {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .device-chip {
+        font-size: 10px;
+        padding: 4px 8px;
+        background: var(--secondary);
+        border-radius: var(--radius-full);
+    }
+
+    .device-chip.more {
+        background: var(--accent);
+        color: white;
+    }
+
+    .routine-controls {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-trigger,
+    .btn-edit,
+    .btn-delete {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        background: var(--secondary);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-trigger {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .btn-delete:hover {
+        border-color: var(--danger);
+        background: var(--danger-subtle);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .form-row-routine {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-grid-3 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .sidebar-content {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .form-row-routine {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .routine-item {
+            grid-template-columns: 48px 1fr;
+        }
+
+        .routine-devices,
+        .routine-controls {
+            grid-column: span 2;
+        }
+    }
+
+    /* Action Picker Styles */
+    .action-options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .action-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+        width: 100%;
+    }
+
+    .action-option:hover {
+        border-color: var(--accent);
+        background: var(--bg-elevated);
+    }
+
+    .action-option.featured {
+        border-color: var(--warning);
+        background: linear-gradient(135deg, var(--warning-subtle) 0%, var(--secondary) 100%);
+    }
+
+    .action-option .action-icon {
+        font-size: 1.2rem;
+    }
+
+    .action-option .action-name {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .action-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+        background: var(--accent);
+        color: white;
+        border-radius: var(--radius-full);
+        font-weight: 700;
+    }
+
+    .action-categories {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .added-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .added-action-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+    }
+
+    .added-action-icon {
+        font-size: 1.5rem;
+    }
+
+    .added-action-info {
+        flex: 1;
+    }
+
+    .added-action-name {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .added-action-settings {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .added-action-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-action-btn {
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        background: var(--secondary);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .action-action-btn.remove:hover {
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .add-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 16px;
+        border: 2px dashed var(--border);
+        background: transparent;
+        border-radius: var(--radius-md);
+        color: var(--muted);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .add-action-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .spam-triggers,
+    .spam-channels {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .spam-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    .messages-textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--secondary);
+        color: var(--text);
+        font-size: 13px;
+        resize: vertical;
+    }
+
+    /* Card Header Row */
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .btn-close-form {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        background: var(--secondary);
+        border-radius: var(--radius-md);
+        color: var(--muted);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-close-form:hover {
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    /* Hidden class */
+    .hidden {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Store added devices
+    let addedDevices = [];
+    let currentDevice = null;
+    let audioPreview = null;
+
+    // Set default date to today
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateInput = document.querySelector('input[name="trigger_date"]');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+    });
+
+    // Preview sound
+    function previewSound() {
+        const soundPath = document.getElementById('soundSelect').value;
+        if (audioPreview) {
+            audioPreview.pause();
+        }
+        audioPreview = new Audio('/static/sounds/' + soundPath);
+        audioPreview.play();
+        showToast('Playing sound preview...', 'info');
+    }
+
+    // Open device picker modal
+    function openDevicePicker() {
+        document.getElementById('devicePickerModal').classList.remove('hidden');
+    }
+
+    function closeDevicePicker() {
+        document.getElementById('devicePickerModal').classList.add('hidden');
+    }
+
+    // Select a device and open settings sidebar
+    function selectDevice(id, icon, name, type) {
+        currentDevice = { id, icon, name, type };
+        closeDevicePicker();
+        openDeviceSettings(id, icon, name, type);
+    }
+
+    function openDeviceSettings(id, icon, name, type) {
+        document.getElementById('sidebarDeviceName').textContent = icon + ' ' + name;
+        const body = document.getElementById('sidebarBody');
+
+        if (type === 'light') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Power</label>
+                    <div class="power-row">
+                        <button type="button" class="power-btn on" onclick="setPower(this, 'on')">ON</button>
+                        <button type="button" class="power-btn off active" onclick="setPower(this, 'off')">OFF</button>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Brightness</label>
+                    <div class="slider-row">
+                        <input type="range" id="brightnessSlider" min="0" max="100" value="100" oninput="updateSliderValue(this)">
+                        <span class="slider-value" id="brightnessValue">100%</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Color</label>
+                    <select class="color-select" id="colorSelect">
+                        <option value="white">⚪ White</option>
+                        <option value="warm">🟡 Warm White</option>
+                        <option value="daylight">🔵 Daylight</option>
+                        <option value="red">🔴 Red</option>
+                        <option value="orange">🟠 Orange</option>
+                        <option value="yellow">🟡 Yellow</option>
+                        <option value="green">🟢 Green</option>
+                        <option value="cyan">🔵 Cyan</option>
+                        <option value="blue">🔵 Blue</option>
+                        <option value="purple">🟣 Purple</option>
+                        <option value="pink">🩷 Pink</option>
+                    </select>
+                </div>
+            `;
+        } else if (type === 'ac') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Power</label>
+                    <div class="power-row">
+                        <button type="button" class="power-btn on" onclick="setPower(this, 'on')">ON</button>
+                        <button type="button" class="power-btn off active" onclick="setPower(this, 'off')">OFF</button>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Temperature</label>
+                    <select class="temp-select" id="tempSelect">
+                        ${Array.from({ length: 15 }, (_, i) => `<option value="${16 + i}" ${16 + i === 24 ? 'selected' : ''}>${16 + i}°C</option>`).join('')}
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Mode</label>
+                    <select class="mode-select" id="modeSelect">
+                        <option value="cool">❄️ Cool</option>
+                        <option value="fan">🌀 Fan Only</option>
+                        <option value="dry">💧 Dry</option>
+                        <option value="auto">🔄 Auto</option>
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Fan Speed</label>
+                    <select class="fan-select" id="fanSelect">
+                        <option value="auto">Auto</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            `;
+        } else if (type === 'plug') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Power</label>
+                    <div class="power-row">
+                        <button type="button" class="power-btn on" onclick="setPower(this, 'on')">ON</button>
+                        <button type="button" class="power-btn off active" onclick="setPower(this, 'off')">OFF</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('deviceSettingsSidebar').classList.remove('hidden');
+    }
+
+    function closeDeviceSettings() {
+        document.getElementById('deviceSettingsSidebar').classList.add('hidden');
+        currentDevice = null;
+    }
+
+    function setPower(btn, value) {
+        const row = btn.parentElement;
+        row.querySelectorAll('.power-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function updateSliderValue(slider) {
+        document.getElementById('brightnessValue').textContent = slider.value + '%';
+    }
+
+    function saveDeviceSettings() {
+        if (!currentDevice) return;
+
+        const body = document.getElementById('sidebarBody');
+        const powerBtn = body.querySelector('.power-btn.active');
+        const power = powerBtn ? powerBtn.textContent : 'OFF';
+
+        let settings = power;
+
+        if (currentDevice.type === 'light') {
+            const brightness = body.querySelector('#brightnessSlider')?.value || 100;
+            const color = body.querySelector('#colorSelect')?.value || 'white';
+            settings = `${power}, ${brightness}%, ${color}`;
+        } else if (currentDevice.type === 'ac') {
+            const temp = body.querySelector('#tempSelect')?.value || 24;
+            const mode = body.querySelector('#modeSelect')?.value || 'cool';
+            settings = `${power}, ${temp}°C, ${mode}`;
+        }
+
+        const existingIndex = addedDevices.findIndex(d => d.id === currentDevice.id);
+        if (existingIndex >= 0) {
+            addedDevices[existingIndex].settings = settings;
+        } else {
+            addedDevices.push({ ...currentDevice, settings });
+        }
+
+        renderAddedDevices();
+        closeDeviceSettings();
+        showToast(`${currentDevice.name} added`, 'success');
+    }
+
+    function renderAddedDevices() {
+        const container = document.getElementById('addedDevices');
+
+        if (addedDevices.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = addedDevices.map(device => `
+            <div class="added-device-item" data-id="${device.id}">
+                <span class="added-device-icon">${device.icon}</span>
+                <div class="added-device-info">
+                    <div class="added-device-name">${device.name}</div>
+                    <div class="added-device-settings">${device.settings}</div>
+                </div>
+                <div class="added-device-actions">
+                    <button type="button" class="device-action-btn" onclick="editDevice('${device.id}')">Edit</button>
+                    <button type="button" class="device-action-btn remove" onclick="removeDevice('${device.id}')">×</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function editDevice(id) {
+        const device = addedDevices.find(d => d.id === id);
+        if (device) {
+            currentDevice = device;
+            openDeviceSettings(device.id, device.icon, device.name, device.type);
+        }
+    }
+
+    function removeDevice(id) {
+        addedDevices = addedDevices.filter(d => d.id !== id);
+        renderAddedDevices();
+        showToast('Device removed', 'info');
+    }
+
+    // Close modal on overlay click
+    document.getElementById('devicePickerModal').addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) closeDevicePicker();
+    });
+
+    document.getElementById('deviceSettingsSidebar').addEventListener('click', (e) => {
+        if (e.target.classList.contains('sidebar-overlay')) closeDeviceSettings();
+    });
+
+    // Repeat selector
+    document.getElementById('repeatSelect').addEventListener('change', (e) => {
+        const daySelector = document.getElementById('daySelector');
+        daySelector.classList.toggle('hidden', e.target.value !== 'custom');
+    });
+
+    // Form submission
+    document.getElementById('routineForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        const data = {
+            name: formData.get('name'),
+            icon: formData.get('icon'),
+            description: formData.get('description'),
+            trigger_time: formData.get('trigger_time'),
+            trigger_date: formData.get('trigger_date'),
+            label: formData.get('label'),
+            mode: formData.get('mode'),
+            sound: formData.get('sound'),
+            repeat: formData.get('repeat'),
+            devices: addedDevices,
+            actions: {
+                tts: formData.get('action_tts') === '1',
+                tts_message: formData.get('tts_message'),
+                music: formData.get('action_music') === '1',
+                music_playlist: formData.get('music_playlist'),
+                notify: formData.get('action_notify') === '1',
+                notify_wa: formData.get('notify_wa') === '1',
+                notify_tg: formData.get('notify_tg') === '1'
+            }
+        };
+
+        try {
+            const result = await apiRequest('/api/routines', 'POST', data);
+            showToast('Routine created successfully!', 'success');
+            e.target.reset();
+            addedDevices = [];
+            renderAddedDevices();
+            setTimeout(() => location.reload(), 1000);
+        } catch (error) {
+            showToast('Failed to create routine: ' + error.message, 'error');
+        }
+    });
+
+    async function triggerRoutine(id) {
+        try {
+            await apiRequest(`/api/routines/${id}/run`, 'POST');
+            showToast('Routine triggered!', 'success');
+        } catch (error) {
+            showToast('Failed to trigger routine', 'error');
+        }
+    }
+
+    async function deleteRoutine(id) {
+        if (!confirm('Delete this routine?')) return;
+        try {
+            await apiRequest(`/api/routines/${id}`, 'DELETE');
+            document.getElementById(`routine-${id}`).remove();
+            showToast('Routine deleted', 'success');
+        } catch (error) {
+            showToast('Failed to delete routine', 'error');
+        }
+    }
+
+    function editRoutine(id) { showToast('Edit feature coming soon', 'info'); }
+    function previewRoutine() { showToast('Preview: Actions will be simulated', 'info'); }
+
+    // ===== ACTION MANAGEMENT =====
+    let addedActions = [];
+    let currentAction = null;
+
+    function openActionPicker() {
+        document.getElementById('actionPickerModal').classList.remove('hidden');
+    }
+
+    function closeActionPicker() {
+        document.getElementById('actionPickerModal').classList.add('hidden');
+    }
+
+    function selectAction(id, icon, name) {
+        currentAction = { id, icon, name };
+        closeActionPicker();
+        openActionSettings(id, icon, name);
+    }
+
+    function openActionSettings(id, icon, name) {
+        document.getElementById('sidebarActionName').textContent = icon + ' ' + name;
+        const body = document.getElementById('actionSidebarBody');
+
+        if (id === 'voice') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Message</label>
+                    <textarea class="messages-textarea" id="voiceMessage" placeholder="Good morning! Time to wake up!">Good morning! Time to wake up!</textarea>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Volume</label>
+                    <div class="slider-row">
+                        <input type="range" id="voiceVolume" min="0" max="100" value="80" oninput="document.getElementById('voiceVolVal').textContent=this.value+'%'">
+                        <span class="slider-value" id="voiceVolVal">80%</span>
+                    </div>
+                </div>
+            `;
+        } else if (id === 'whatsapp' || id === 'telegram') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Message</label>
+                    <textarea class="messages-textarea" id="msgContent" placeholder="Your alarm is ringing!">Your alarm is ringing! Wake up!</textarea>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Include Time</label>
+                    <label class="spam-check"><input type="checkbox" id="includeTime" checked> <span>Include current time</span></label>
+                </div>
+            `;
+        } else if (id === 'spam') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Trigger When</label>
+                    <div class="spam-triggers">
+                        <label class="spam-check"><input type="checkbox" id="trigSnooze" checked> <span>Snooze</span></label>
+                        <label class="spam-check"><input type="checkbox" id="trigTimeout"> <span>Timeout</span></label>
+                        <label class="spam-check"><input type="checkbox" id="trigMissed"> <span>Missed</span></label>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Send To</label>
+                    <div class="spam-channels">
+                        <label class="spam-check"><input type="checkbox" id="chanWA" checked> <span>WhatsApp</span></label>
+                        <label class="spam-check"><input type="checkbox" id="chanTG" checked> <span>Telegram</span></label>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Interval</label>
+                    <select class="mode-select" id="spamInterval">
+                        <option value="30">Every 30 seconds</option>
+                        <option value="60" selected>Every 1 minute</option>
+                        <option value="120">Every 2 minutes</option>
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Max Messages</label>
+                    <select class="mode-select" id="spamMax">
+                        <option value="5">5 messages</option>
+                        <option value="10" selected>10 messages</option>
+                        <option value="20">20 messages</option>
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Messages (one per line)</label>
+                    <textarea class="messages-textarea" id="spamMessages">Wake up! Alarm is still ringing!
+Hey, you pressed snooze again!
+URGENT: You need to wake up NOW!
+This is your final warning!</textarea>
+                </div>
+            `;
+        } else if (id === 'music') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Playlist</label>
+                    <select class="mode-select" id="playlist">
+                        <option value="morning">Morning Vibes</option>
+                        <option value="focus">Focus & Concentration</option>
+                        <option value="chill">Chill & Relax</option>
+                        <option value="energy">High Energy</option>
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Volume</label>
+                    <div class="slider-row">
+                        <input type="range" id="musicVolume" min="0" max="100" value="60" oninput="document.getElementById('musicVolVal').textContent=this.value+'%'">
+                        <span class="slider-value" id="musicVolVal">60%</span>
+                    </div>
+                </div>
+            `;
+        } else if (id === 'weather') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Announce Weather</label>
+                    <label class="spam-check"><input type="checkbox" id="weatherVoice" checked> <span>Speak weather info</span></label>
+                </div>
+            `;
+        } else if (id === 'quote') {
+            body.innerHTML = `
+                <div class="settings-group">
+                    <label class="settings-label">Quote Category</label>
+                    <select class="mode-select" id="quoteCategory">
+                        <option value="motivational">Motivational</option>
+                        <option value="productivity">Productivity</option>
+                        <option value="wisdom">Wisdom</option>
+                        <option value="random">Random</option>
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Announce Quote</label>
+                    <label class="spam-check"><input type="checkbox" id="quoteVoice" checked> <span>Speak quote aloud</span></label>
+                </div>
+            `;
+        } else {
+            body.innerHTML = '<p>Settings coming soon...</p>';
+        }
+
+        document.getElementById('actionSettingsSidebar').classList.remove('hidden');
+    }
+
+    function closeActionSettings() {
+        document.getElementById('actionSettingsSidebar').classList.add('hidden');
+        currentAction = null;
+    }
+
+    function saveActionSettings() {
+        if (!currentAction) return;
+
+        let settings = '';
+        const body = document.getElementById('actionSidebarBody');
+
+        if (currentAction.id === 'voice') {
+            const msg = body.querySelector('#voiceMessage')?.value || '';
+            const vol = body.querySelector('#voiceVolume')?.value || 80;
+            settings = `${msg.substring(0, 30)}..., ${vol}%`;
+        } else if (currentAction.id === 'whatsapp' || currentAction.id === 'telegram') {
+            const msg = body.querySelector('#msgContent')?.value || '';
+            settings = msg.substring(0, 40) + '...';
+        } else if (currentAction.id === 'spam') {
+            const interval = body.querySelector('#spamInterval')?.value || 60;
+            const max = body.querySelector('#spamMax')?.value || 10;
+            settings = `Every ${interval}s, max ${max} messages`;
+        } else if (currentAction.id === 'music') {
+            const playlist = body.querySelector('#playlist')?.value || 'morning';
+            settings = playlist;
+        } else if (currentAction.id === 'weather') {
+            settings = 'Voice announcement';
+        } else if (currentAction.id === 'quote') {
+            const cat = body.querySelector('#quoteCategory')?.value || 'motivational';
+            settings = cat;
+        }
+
+        const existingIndex = addedActions.findIndex(a => a.id === currentAction.id);
+        if (existingIndex >= 0) {
+            addedActions[existingIndex].settings = settings;
+        } else {
+            addedActions.push({ ...currentAction, settings });
+        }
+
+        renderAddedActions();
+        closeActionSettings();
+        showToast(`${currentAction.name} added`, 'success');
+    }
+
+    function renderAddedActions() {
+        const container = document.getElementById('addedActions');
+        if (addedActions.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = addedActions.map(action => `
+            <div class="added-action-item" data-id="${action.id}">
+                <span class="added-action-icon">${action.icon}</span>
+                <div class="added-action-info">
+                    <div class="added-action-name">${action.name}</div>
+                    <div class="added-action-settings">${action.settings}</div>
+                </div>
+                <div class="added-action-actions">
+                    <button type="button" class="action-action-btn" onclick="editAction('${action.id}')">Edit</button>
+                    <button type="button" class="action-action-btn remove" onclick="removeAction('${action.id}')">x</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function editAction(id) {
+        const action = addedActions.find(a => a.id === id);
+        if (action) {
+            currentAction = action;
+            openActionSettings(action.id, action.icon, action.name);
+        }
+    }
+
+    function removeAction(id) {
+        addedActions = addedActions.filter(a => a.id !== id);
+        renderAddedActions();
+        showToast('Action removed', 'info');
+    }
+
+    // Close modals on overlay click
+    document.getElementById('actionPickerModal')?.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) closeActionPicker();
+    });
+
+    document.getElementById('actionSettingsSidebar')?.addEventListener('click', (e) => {
+        if (e.target.classList.contains('sidebar-overlay')) closeActionSettings();
+    });
+
+    // Toggle create form visibility
+    function toggleCreateForm() {
+        const section = document.getElementById('createRoutineSection');
+        section.classList.toggle('hidden');
+        if (!section.classList.contains('hidden')) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+</script>
+{% endblock %}

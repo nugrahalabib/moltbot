@@ -1,539 +1,901 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shila Wake System v2.0</title>
-    <style>
-        :root {
-            --primary: #FF6B6B;
-            --primary-dark: #E85555;
-            --secondary: #4ECDC4;
-            --dark: #1a1a2e;
-            --darker: #16213e;
-            --light: #eee;
-            --success: #4CAF50;
-            --warning: #FFC107;
-            --danger: #f44336;
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
-            color: var(--light);
-            min-height: 100vh;
-        }
-        
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .header h1 { font-size: 2rem; display: flex; align-items: center; gap: 10px; }
-        .header h1 span { font-size: 2.5rem; }
-        .header .time { text-align: right; }
-        .header .time .current-time { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
-        .header .time .current-date { color: #888; }
-        .header .scheduler-status {
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-        .scheduler-status.running { background: var(--success); }
-        .scheduler-status.stopped { background: var(--danger); }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
-        
-        .card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .card-title { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
-        .card-title span { font-size: 1.5rem; }
-        
-        .next-alarm-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            grid-column: span 2;
-        }
-        
-        .next-alarm-card .alarm-time { font-size: 4rem; font-weight: bold; text-align: center; margin: 10px 0; }
-        .next-alarm-card .alarm-date { text-align: center; font-size: 1.2rem; opacity: 0.9; margin-bottom: 10px; }
-        .next-alarm-card .alarm-info { text-align: center; font-size: 1.1rem; opacity: 0.9; }
-        .next-alarm-card .alarm-countdown { text-align: center; font-size: 1.5rem; margin-top: 15px; opacity: 0.9; font-weight: bold; }
-        
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; text-align: center; }
-        .stat-card .stat-value { font-size: 2rem; font-weight: bold; color: var(--secondary); }
-        .stat-card .stat-label { font-size: 0.9rem; color: #888; }
-        
-        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        
-        .action-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            border-radius: 10px;
-            padding: 15px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 1rem;
-        }
-        
-        .action-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
-        .action-btn.morning { background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%); }
-        .action-btn.work { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
-        .action-btn.sleep { background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); }
-        .action-btn.movie { background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%); }
-        
-        .alarm-list, .reminder-list { max-height: 300px; overflow-y: auto; }
-        
-        .alarm-item, .reminder-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .alarm-item .time { font-size: 1.3rem; font-weight: bold; }
-        .alarm-item .date { font-size: 0.8rem; color: #888; }
-        .alarm-item .mode { padding: 3px 10px; border-radius: 15px; font-size: 0.8rem; text-transform: uppercase; }
-        
-        .mode.gentle { background: var(--success); }
-        .mode.normal { background: var(--warning); color: #333; }
-        .mode.nuclear { background: var(--danger); }
-        
-        .alarm-item .label { color: #888; font-size: 0.9rem; }
-        
-        .delete-btn {
-            background: transparent;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 5px;
-            opacity: 0.5;
-            transition: opacity 0.3s;
-        }
-        .delete-btn:hover { opacity: 1; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #888; }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-size: 1rem;
-        }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
-        
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .submit-btn:hover { background: var(--primary-dark); }
-        
-        .smart-home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        
-        .smart-btn {
-            padding: 15px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        .smart-btn span { font-size: 1.5rem; }
-        .smart-btn.on { background: var(--success); color: white; }
-        .smart-btn.off { background: rgba(255,255,255,0.1); color: white; }
-        .smart-btn:hover { transform: scale(1.05); }
-        
-        .test-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        
-        .test-btn {
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: transparent;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .test-btn:hover { background: rgba(255,255,255,0.1); }
-        
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--success);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            display: none;
-            animation: slideIn 0.3s ease;
-            z-index: 1000;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @media (max-width: 768px) {
-            .next-alarm-card { grid-column: span 1; }
-            .header { flex-direction: column; text-align: center; }
-            .header .time { margin-top: 15px; }
-            .stats { grid-template-columns: 1fr; }
-            .test-grid { grid-template-columns: repeat(2, 1fr); }
-            .form-row { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header class="header">
-            <h1><span>🌅</span> Shila Wake System <small style="font-size: 0.5em; opacity: 0.7;">v2.0</small></h1>
-            <div class="time">
-                <div class="current-time" id="clock">{{ current_time }}</div>
-                <div class="current-date">{{ current_date }}</div>
-                <div class="scheduler-status {% if scheduler_running %}running{% else %}stopped{% endif %}">
-                    Scheduler: {% if scheduler_running %}Running{% else %}Stopped{% endif %}
-                </div>
-            </div>
-        </header>
-        
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-value">{{ alarms|length }}</div>
-                <div class="stat-label">Alarms</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">{{ reminders|length }}</div>
-                <div class="stat-label">Reminders</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="next-alarm-time">{% if next_alarm %}{{ next_alarm.alarm.time }}{% else %}--:--{% endif %}</div>
-                <div class="stat-label">Next Alarm</div>
-            </div>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Shila Wake System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Overview of your wake system{% endblock %}
+
+{% block content %}
+<!-- Section 1: Hero - Next Alarm -->
+<section class="hero-section">
+    {% if next_alarm %}
+    <div class="hero-card">
+        <div class="hero-content">
+            <div class="hero-label">Next Alarm</div>
+            <div class="hero-time">{{ next_alarm.time }}</div>
+            <div class="hero-countdown" id="countdown">in {{ next_alarm.countdown }}</div>
+            {% if next_alarm.label %}
+            <div class="hero-alarm-label">{{ next_alarm.label }}</div>
+            {% endif %}
         </div>
-        
-        <div class="grid">
-            <div class="card next-alarm-card">
-                {% if next_alarm %}
-                <div class="alarm-time" id="next-time">{{ next_alarm.alarm.time }}</div>
-                <div class="alarm-date" id="next-date">{{ next_alarm.alarm.date }}</div>
-                <div class="alarm-info">
-                    <span class="mode {{ next_alarm.alarm.mode }}">{{ next_alarm.alarm.mode }}</span>
-                    <span id="next-label">{{ next_alarm.alarm.label }}</span>
-                </div>
-                <div class="alarm-countdown" id="countdown">Calculating...</div>
-                {% else %}
-                <div class="alarm-time">--:--</div>
-                <div class="alarm-date">No date</div>
-                <div class="alarm-info">No alarm set</div>
-                <div class="alarm-countdown">Set an alarm to get started!</div>
-                {% endif %}
+        <div class="hero-meta">
+            <div class="mode-badge {{ next_alarm.mode|lower }}">
+                <span>{{ next_alarm.mode_icon }}</span>
+                <span>{{ next_alarm.mode }} Mode</span>
             </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><span>🎛️</span> Quick Routines</div>
-                </div>
-                <div class="quick-actions">
-                    <button class="action-btn morning" onclick="activateRoutine('morning')">☀️ Morning</button>
-                    <button class="action-btn work" onclick="activateRoutine('work')">💼 Work</button>
-                    <button class="action-btn sleep" onclick="activateRoutine('sleep')">🌙 Sleep</button>
-                    <button class="action-btn movie" onclick="activateRoutine('movie')">🎬 Movie</button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><span>⏰</span> Add Alarm</div>
-                </div>
-                <form id="alarmForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Time</label>
-                            <input type="time" name="time" required value="07:00">
-                        </div>
-                        <div class="form-group">
-                            <label>Date (optional)</label>
-                            <input type="date" name="date" placeholder="Auto if empty">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Mode</label>
-                        <select name="mode">
-                            <option value="gentle">☀️ Gentle</option>
-                            <option value="normal" selected>⏰ Normal</option>
-                            <option value="nuclear">☢️ Nuclear</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Label</label>
-                        <input type="text" name="label" placeholder="Alarm label...">
-                    </div>
-                    <button type="submit" class="submit-btn">Add Alarm</button>
-                </form>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><span>📋</span> Alarms</div>
-                </div>
-                <div class="alarm-list" id="alarmList">
-                    {% for alarm in alarms %}
-                    <div class="alarm-item" data-id="{{ alarm.id }}">
-                        <div>
-                            <div class="time">{{ alarm.time }}</div>
-                            <div class="date">{{ alarm.date or 'No date' }}</div>
-                            <div class="label">{{ alarm.label }}</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="mode {{ alarm.mode }}">{{ alarm.mode }}</span>
-                            <button class="delete-btn" onclick="deleteAlarm('{{ alarm.id }}')">🗑️</button>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p style="text-align: center; color: #888; padding: 20px;">No alarms set</p>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><span>📝</span> Add Reminder</div>
-                </div>
-                <form id="reminderForm">
-                    <div class="form-group">
-                        <label>Message</label>
-                        <input type="text" name="message" placeholder="Reminder message..." required>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Time</label>
-                            <input type="time" name="time" required value="14:00">
-                        </div>
-                        <div class="form-group">
-                            <label>Date (optional)</label>
-                            <input type="date" name="date">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Priority</label>
-                        <select name="priority">
-                            <option value="low">Low</option>
-                            <option value="normal" selected>Normal</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="submit-btn">Add Reminder</button>
-                </form>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><span>🏠</span> Smart Home</div>
-                </div>
-                <div class="smart-home-grid">
-                    <button class="smart-btn on" onclick="controlLights('on')">💡 Lights ON</button>
-                    <button class="smart-btn off" onclick="controlLights('off')">💡 Lights OFF</button>
-                    <button class="smart-btn on" onclick="controlAC('on')">❄️ AC ON</button>
-                    <button class="smart-btn off" onclick="controlAC('off')">❄️ AC OFF</button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title"><span>🧪</span> Test</div>
-                </div>
-                <div class="test-grid">
-                    <button class="test-btn" onclick="runTest('sound')">🔊 Sound</button>
-                    <button class="test-btn" onclick="runTest('lights')">💡 Lights</button>
-                    <button class="test-btn" onclick="runTest('tts')">🗣️ TTS</button>
-                    <button class="test-btn" onclick="runTest('wake')">⏰ Wake</button>
-                </div>
-                <button class="submit-btn" style="margin-top: 15px;" onclick="manualCheck()">🔄 Manual Check</button>
+            <div class="hero-actions">
+                <button class="btn-hero" onclick="skipAlarm()">⏭️ Skip</button>
+                <a href="/alarms" class="btn-hero primary">✏️ Edit</a>
             </div>
         </div>
     </div>
-    
-    <div class="toast" id="toast"></div>
-    
-    <script>
-        // Clock update
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID', { 
-                hour: '2-digit', minute: '2-digit', second: '2-digit' 
-            });
+    {% else %}
+    <div class="hero-card no-alarm">
+        <div class="hero-content">
+            <div class="hero-label">No Alarm Set</div>
+            <div class="hero-time">--:--</div>
+            <div class="hero-countdown">Create your first alarm</div>
+        </div>
+        <div class="hero-meta">
+            <a href="/alarms" class="btn primary large">+ Add Alarm</a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Section 2: Stats Row -->
+<section class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon">☀️</div>
+        <div class="stat-info">
+            <div class="stat-label">Today's Wake</div>
+            <div class="stat-value">{{ stats.wake_status or 'Pending' }}</div>
+        </div>
+    </div>
+    <a href="/analytics" class="stat-card clickable">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+            <div class="stat-label">Weekly Score</div>
+            <div class="stat-value accent">{{ stats.weekly_score or '78' }}%</div>
+        </div>
+    </a>
+    <a href="/alarms" class="stat-card clickable">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-info">
+            <div class="stat-label">Active Alarms</div>
+            <div class="stat-value">{{ stats.alarm_count or '0' }}</div>
+        </div>
+    </a>
+    <a href="/routines" class="stat-card clickable">
+        <div class="stat-icon">🎛️</div>
+        <div class="stat-info">
+            <div class="stat-label">Routines</div>
+            <div class="stat-value">{{ stats.routine_count or '0' }}</div>
+        </div>
+    </a>
+</section>
+
+<!-- Section 3: Today's Overview (2 columns) -->
+<section class="overview-grid">
+    <!-- Left: Today + Weather + Events -->
+    <div class="card today-card">
+        <div class="today-header">
+            <div class="today-label">Today</div>
+            <div class="today-date">{{ current_date or 'Sabtu, 1 Feb 2026' }}</div>
+        </div>
+
+        <div class="weather-mini">
+            <div class="weather-icon">{{ weather.icon or '⛅' }}</div>
+            <div class="weather-info">
+                <span class="weather-temp">{{ weather.temp or '28' }}°C</span>
+                <span class="weather-condition">{{ weather.condition or 'Partly Cloudy' }}</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="events-section">
+            <div class="section-label">📅 Today's Events</div>
+            {% if schedule %}
+            <div class="events-list">
+                {% for event in schedule[:3] %}
+                <div class="event-item">
+                    <span class="event-time">{{ event.time }}</span>
+                    <span class="event-title">{{ event.title }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="muted small">No events scheduled</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right: Quick Actions -->
+    <div class="card">
+        <div class="card-title">Quick Actions</div>
+        <div class="card-sub">Launch routines and shortcuts</div>
+
+        <div class="quick-actions-grid">
+            <button class="action-card" onclick="activateRoutine('morning')">
+                <span class="action-icon">🌅</span>
+                <span class="action-label">Morning Routine</span>
+            </button>
+            <button class="action-card" onclick="activateRoutine('sleep')">
+                <span class="action-icon">🌙</span>
+                <span class="action-label">Sleep Routine</span>
+            </button>
+            <a href="/alarms" class="action-card">
+                <span class="action-icon">⏰</span>
+                <span class="action-label">Quick Alarm</span>
+            </a>
+            <a href="/analytics" class="action-card">
+                <span class="action-icon">📈</span>
+                <span class="action-label">Analytics</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Section 4: Upcoming Alarms -->
+<section class="card">
+    <div class="card-header-row">
+        <div>
+            <div class="card-title">Upcoming Alarms</div>
+            <div class="card-sub">Your next scheduled wake-ups</div>
+        </div>
+        <a href="/alarms" class="btn">View All →</a>
+    </div>
+
+    <div class="alarms-scroll">
+        {% if alarms %}
+        {% for alarm in alarms[:5] %}
+        <div class="alarm-card">
+            <div class="alarm-card-time">{{ alarm.time }}</div>
+            <div class="alarm-card-date">{{ alarm.date_short }}</div>
+            {% if alarm.label %}
+            <div class="alarm-card-label">{{ alarm.label }}</div>
+            {% endif %}
+            <div class="alarm-card-footer">
+                <span class="mode-pill {{ alarm.mode|lower }}">{{ alarm.mode_icon }} {{ alarm.mode }}</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" {% if alarm.enabled %}checked{% endif %}
+                        onchange="toggleAlarm('{{ alarm.id }}')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state-inline">
+            <span>⏰</span>
+            <span>No alarms set. <a href="/alarms">Create one</a></span>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Section 5: Recent Activity + AI Insight -->
+<section class="bottom-grid">
+    <!-- Left: Recent Activity -->
+    <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div class="card-sub">Latest events from your system</div>
+
+        <div class="activity-feed">
+            {% if activity %}
+            {% for item in activity[:4] %}
+            <div class="activity-item">
+                <span class="activity-icon">{{ item.icon }}</span>
+                <div class="activity-content">
+                    <span class="activity-text">{{ item.text }}</span>
+                    <span class="activity-time">{{ item.time }}</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="activity-item">
+                <span class="activity-icon">✅</span>
+                <div class="activity-content">
+                    <span class="activity-text">Alarm dismissed</span>
+                    <span class="activity-time">Today 06:35</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-icon">🎛️</span>
+                <div class="activity-content">
+                    <span class="activity-text">Morning routine activated</span>
+                    <span class="activity-time">Today 06:36</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-icon">💡</span>
+                <div class="activity-content">
+                    <span class="activity-text">Lights turned on</span>
+                    <span class="activity-time">Today 06:36</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right: AI Insight -->
+    <div class="card insight-card">
+        <div class="insight-header">
+            <span class="insight-badge">💡 AI Insight</span>
+            <a href="/analytics" class="link-small">View Analytics →</a>
+        </div>
+        <div class="insight-content">
+            <p>{{ ai_insight or 'Kamu lebih mudah bangun di hari Selasa. Pertimbangkan untuk menjadwalkan tugas penting
+                di pagi hari Selasa!' }}</p>
+        </div>
+        <div class="insight-footer">
+            <span class="muted small">Based on your last 30 days</span>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        margin-top: 8px;
+    }
+
+    .hero-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 32px 40px;
+        background: linear-gradient(135deg, var(--secondary) 0%, rgba(255, 107, 157, 0.08) 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255, 107, 157, 0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .hero-card.no-alarm {
+        background: var(--secondary);
+    }
+
+    .hero-content {
+        z-index: 1;
+    }
+
+    .hero-label {
+        font-size: 14px;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .hero-time {
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+        letter-spacing: -2px;
+    }
+
+    .hero-countdown {
+        font-size: 18px;
+        color: var(--accent);
+        margin-top: 8px;
+        font-weight: 500;
+    }
+
+    .hero-alarm-label {
+        font-size: 14px;
+        color: var(--muted);
+        margin-top: 8px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-full);
+        display: inline-block;
+    }
+
+    .hero-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 16px;
+        z-index: 1;
+    }
+
+    .mode-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: var(--radius-full);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .mode-badge.gentle {
+        background: rgba(46, 160, 67, 0.15);
+        color: var(--success);
+        border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .mode-badge.normal {
+        background: rgba(250, 166, 26, 0.15);
+        color: var(--warning);
+        border: 1px solid rgba(250, 166, 26, 0.3);
+    }
+
+    .mode-badge.nuclear {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--danger);
+        border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-hero {
+        padding: 10px 18px;
+        border-radius: var(--radius-md);
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-hero:hover {
+        border-color: var(--accent);
+    }
+
+    .btn-hero.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+    }
+
+    .stat-card.clickable:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .stat-value.accent {
+        color: var(--accent);
+    }
+
+    /* Overview Grid */
+    .overview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .today-card {
+        padding: 24px;
+    }
+
+    .today-header {
+        margin-bottom: 16px;
+    }
+
+    .today-label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .today-date {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-top: 4px;
+    }
+
+    .weather-mini {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--radius-md);
+    }
+
+    .weather-icon {
+        font-size: 2rem;
+    }
+
+    .weather-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .weather-temp {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .weather-condition {
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 16px 0;
+    }
+
+    .section-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 12px;
+    }
+
+    .events-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .event-item {
+        display: flex;
+        gap: 12px;
+        font-size: 13px;
+    }
+
+    .event-time {
+        color: var(--accent);
+        font-weight: 500;
+        min-width: 70px;
+    }
+
+    .event-title {
+        color: var(--text);
+    }
+
+    /* Quick Actions Grid */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .action-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 20px 16px;
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .action-card:hover {
+        border-color: var(--accent);
+        background: rgba(255, 107, 157, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .action-icon {
+        font-size: 1.5rem;
+    }
+
+    .action-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+    }
+
+    /* Card Header Row */
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    /* Alarms Scroll */
+    .alarms-scroll {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding: 8px 0;
+        margin-top: 16px;
+    }
+
+    .alarms-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .alarms-scroll::-webkit-scrollbar-track {
+        background: var(--secondary);
+        border-radius: 3px;
+    }
+
+    .alarms-scroll::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+    }
+
+    .alarm-card {
+        flex-shrink: 0;
+        width: 160px;
+        padding: 16px;
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        transition: all 0.2s;
+    }
+
+    .alarm-card:hover {
+        border-color: var(--accent);
+    }
+
+    .alarm-card-time {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .alarm-card-date {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    .alarm-card-label {
+        font-size: 12px;
+        color: var(--text);
+        margin-top: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .alarm-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .mode-pill {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: var(--radius-full);
+    }
+
+    .mode-pill.gentle {
+        background: rgba(46, 160, 67, 0.15);
+        color: var(--success);
+    }
+
+    .mode-pill.normal {
+        background: rgba(250, 166, 26, 0.15);
+        color: var(--warning);
+    }
+
+    .mode-pill.nuclear {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--danger);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        width: 36px;
+        height: 20px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--border);
+        border-radius: 20px;
+        transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+        background: var(--accent);
+    }
+
+    .toggle-switch input:checked+.toggle-slider::before {
+        transform: translateX(16px);
+    }
+
+    .empty-state-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 14px;
+        padding: 20px;
+    }
+
+    .empty-state-inline a {
+        color: var(--accent);
+    }
+
+    /* Bottom Grid */
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    /* Activity Feed */
+    .activity-feed {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: var(--secondary);
+        border-radius: var(--radius-md);
+    }
+
+    .activity-icon {
+        font-size: 1.2rem;
+    }
+
+    .activity-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .activity-text {
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    .activity-time {
+        font-size: 11px;
+        color: var(--muted);
+    }
+
+    /* Insight Card */
+    .insight-card {
+        background: linear-gradient(135deg, var(--secondary) 0%, rgba(255, 107, 157, 0.05) 100%);
+        border-left: 3px solid var(--accent);
+    }
+
+    .insight-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .insight-badge {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent);
+    }
+
+    .link-small {
+        font-size: 12px;
+        color: var(--muted);
+        text-decoration: none;
+    }
+
+    .link-small:hover {
+        color: var(--accent);
+    }
+
+    .insight-content {
+        margin: 16px 0;
+    }
+
+    .insight-content p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text);
+    }
+
+    .insight-footer {
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    /* Utilities */
+    .small {
+        font-size: 12px;
+    }
+
+    .muted {
+        color: var(--muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
         }
-        setInterval(updateClock, 1000);
-        
-        // Fetch and update countdown from API
-        async function updateCountdown() {
-            try {
-                const response = await fetch('/api/next-alarm');
-                const data = await response.json();
-                
-                if (data.next_alarm) {
-                    const alarm = data.next_alarm;
-                    const seconds = alarm.seconds_until;
-                    
-                    const h = Math.floor(seconds / 3600);
-                    const m = Math.floor((seconds % 3600) / 60);
-                    const s = seconds % 60;
-                    
-                    document.getElementById('countdown').textContent = `${h}h ${m}m ${s}s until alarm`;
-                    document.getElementById('next-time').textContent = alarm.time;
-                    document.getElementById('next-date').textContent = alarm.date;
-                    document.getElementById('next-label').textContent = alarm.label;
-                    document.getElementById('next-alarm-time').textContent = alarm.time;
-                }
-            } catch (err) {
-                console.error('Failed to update countdown:', err);
-            }
+
+        .overview-grid,
+        .bottom-grid {
+            grid-template-columns: 1fr;
         }
-        
-        // Update countdown every second
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
-        
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.background = type === 'error' ? '#f44336' : '#4CAF50';
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+
+        .hero-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 24px;
         }
-        
-        // Alarm form
-        document.getElementById('alarmForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-            try {
-                const response = await fetch('/api/alarms', { method: 'POST', body: formData });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast('Alarm added!');
+
+        .hero-meta {
+            align-items: center;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-time {
+            font-size: 3rem;
+        }
+
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Countdown timer
+    {% if next_alarm %}
+    const nextAlarmTime = new Date('{{ next_alarm.datetime_iso }}');
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    function updateCountdown() {
+        const now = new Date();
+        const diff = nextAlarmTime - now;
+
+        if (diff <= 0) {
+            document.getElementById('countdown').textContent = '🔔 Ringing!';
+            document.getElementById('countdown').classList.add('ringing');
+            return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+            document.getElementById('countdown').textContent = `in ${hours}h ${mins}m`;
+        } else {
+            document.getElementById('countdown').textContent = `in ${mins}m ${secs}s`;
+        }
+    }
+    {% endif %}
+
+    // Skip alarm
+    function skipAlarm() {
+        if (confirm('Skip the next alarm?')) {
+            fetch('/api/alarms/skip', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    showToast('Alarm skipped', 'success');
                     setTimeout(() => location.reload(), 1000);
-                }
-            } catch (err) {
-                showToast('Error adding alarm', 'error');
-            }
-        });
-        
-        // Reminder form
-        document.getElementById('reminderForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-            try {
-                const response = await fetch('/api/reminders', { method: 'POST', body: formData });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast('Reminder added!');
-                    setTimeout(() => location.reload(), 1000);
-                }
-            } catch (err) {
-                showToast('Error adding reminder', 'error');
-            }
-        });
-        
-        async function deleteAlarm(id) {
-            if (!confirm('Delete this alarm?')) return;
-            try {
-                await fetch(`/api/alarms/${id}`, { method: 'DELETE' });
-                showToast('Alarm deleted!');
-                setTimeout(() => location.reload(), 1000);
-            } catch (err) {
-                showToast('Error deleting alarm', 'error');
-            }
+                })
+                .catch(e => showToast('Failed to skip alarm', 'error'));
         }
-        
-        async function activateRoutine(name) {
-            try {
-                await fetch(`/api/routines/${name}`, { method: 'POST' });
-                showToast(`${name} routine activated!`);
-            } catch (err) {
-                showToast('Error activating routine', 'error');
-            }
-        }
-        
-        async function controlLights(action) {
-            try {
-                await fetch(`/api/lights/${action}`, { method: 'POST' });
-                showToast(`Lights ${action}!`);
-            } catch (err) {
-                showToast('Error controlling lights', 'error');
-            }
-        }
-        
-        async function controlAC(action) {
-            try {
-                await fetch(`/api/ac/${action}`, { method: 'POST' });
-                showToast(`AC ${action}!`);
-            } catch (err) {
-                showToast('Error controlling AC', 'error');
-            }
-        }
-        
-        async function runTest(type) {
-            try {
-                await fetch(`/api/test/${type}`, { method: 'POST' });
-                showToast(`Testing ${type}...`);
-            } catch (err) {
-                showToast('Error running test', 'error');
-            }
-        }
-        
-        async function manualCheck() {
-            try {
-                await fetch('/api/check', { method: 'POST' });
-                showToast('Manual check triggered!');
-            } catch (err) {
-                showToast('Error running check', 'error');
-            }
-        }
-    </script>
-</body>
-</html>
+    }
+
+    // Routine activation
+    function activateRoutine(name) {
+        fetch(`/api/routines/${name}`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => showToast(`${name} routine activated!`, 'success'))
+            .catch(e => showToast('Failed to activate routine', 'error'));
+    }
+
+    // Alarm toggle
+    function toggleAlarm(id) {
+        fetch(`/api/alarms/${id}/toggle`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => showToast(data.enabled ? 'Alarm enabled' : 'Alarm disabled', 'success'))
+            .catch(e => showToast('Failed to toggle alarm', 'error'));
+    }
+</script>
+{% endblock %}

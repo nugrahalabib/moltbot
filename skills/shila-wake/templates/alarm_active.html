@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏰ ALARM AKTIF - Shila Wake</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <style>
+        /* Fullscreen override - hide shell layout */
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Alarm Container - Fullscreen centered */
+        .alarm-fullscreen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Pulsing glow background when alarm is active */
+        .alarm-fullscreen.active::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 50% 30%, var(--accent-subtle) 0%, transparent 60%);
+            animation: pulse-glow 2s var(--ease-in-out) infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* Clock Section */
+        .clock-section {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .clock-display {
+            font-size: clamp(4rem, 18vw, 12rem);
+            font-weight: 700;
+            font-family: var(--mono);
+            color: var(--text-strong);
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .date-display {
+            font-size: 1.25rem;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        /* Alarm Badge */
+        .alarm-badge {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--accent);
+            color: var(--accent-foreground);
+            padding: 0.875rem 2rem;
+            border-radius: var(--radius-full);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1.5rem 0 2.5rem;
+            box-shadow: var(--shadow-lg), 0 0 40px var(--accent-glow);
+            animation: shake 0.4s var(--ease-in-out) infinite;
+        }
+
+        .alarm-badge .icon {
+            font-size: 1.3rem;
+            animation: ring 0.8s ease infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-3px) rotate(-0.5deg);
+            }
+
+            75% {
+                transform: translateX(3px) rotate(0.5deg);
+            }
+        }
+
+        @keyframes ring {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            20% {
+                transform: rotate(12deg);
+            }
+
+            40% {
+                transform: rotate(-12deg);
+            }
+
+            60% {
+                transform: rotate(8deg);
+            }
+
+            80% {
+                transform: rotate(-8deg);
+            }
+        }
+
+        /* Cards */
+        .alarm-card {
+            position: relative;
+            z-index: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem 2rem;
+            margin: 0.75rem 0;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .alarm-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .alarm-card-header .icon {
+            font-size: 1rem;
+        }
+
+        /* Snooze Buttons */
+        .snooze-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .snooze-btn {
+            background: var(--bg-elevated);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .snooze-btn:hover {
+            background: var(--accent-2);
+            border-color: var(--accent-2);
+            color: var(--text-strong);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .snooze-btn:active {
+            transform: translateY(0);
+        }
+
+        .snooze-info {
+            margin-top: 1rem;
+            padding: 0.625rem 1rem;
+            background: var(--accent-2-subtle);
+            border-radius: var(--radius-md);
+            color: var(--accent-2);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Math Problem */
+        .math-box {
+            background: var(--bg-muted);
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+
+        .math-question {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-2);
+            font-family: var(--mono);
+        }
+
+        .math-hint {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .answer-input {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            font-size: 1.25rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--bg-elevated);
+            color: var(--text-strong);
+            font-family: var(--mono);
+            font-weight: 600;
+            outline: none;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .answer-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .answer-input::placeholder {
+            color: var(--muted);
+        }
+
+        .submit-btn {
+            background: var(--accent);
+            color: var(--accent-foreground);
+            border: none;
+            padding: 0.875rem 1.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+            white-space: nowrap;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow);
+        }
+
+        /* Messages */
+        .msg {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            animation: rise var(--duration-normal) var(--ease-out);
+        }
+
+        .msg.error {
+            background: var(--danger-subtle);
+            color: var(--danger);
+            border: 1px solid var(--danger-muted);
+        }
+
+        .msg.success {
+            background: var(--ok-subtle);
+            color: var(--ok);
+            border: 1px solid var(--ok-muted);
+        }
+
+        /* No Alarm State */
+        .no-alarm {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .no-alarm-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .no-alarm h2 {
+            font-size: 1.75rem;
+            color: var(--ok);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .no-alarm p {
+            color: var(--muted);
+        }
+
+        .no-alarm a {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 540px) {
+            .alarm-fullscreen {
+                padding: 1.25rem;
+            }
+
+            .clock-display {
+                font-size: 3.5rem;
+            }
+
+            .alarm-card {
+                padding: 1.25rem 1.5rem;
+            }
+
+            .snooze-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .math-question {
+                font-size: 1.5rem;
+            }
+
+            .answer-row {
+                flex-direction: column;
+            }
+
+            .answer-input {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="alarm-fullscreen {{ 'active' if alarm_status.is_active else '' }}">
+        {% if alarm_status.is_active %}
+        <!-- Active Alarm -->
+        <div class="clock-section">
+            <div class="clock-display" id="clock">{{ current_time }}</div>
+            <div class="date-display" id="date">{{ current_date }}</div>
+        </div>
+
+        <div class="alarm-badge">
+            <span class="icon">🔔</span>
+            <span>{{ alarm_status.label or 'ALARM' }}</span>
+        </div>
+
+        <!-- Snooze Card -->
+        <div class="alarm-card">
+            <div class="alarm-card-header">
+                <span class="icon">💤</span>
+                <span>Tunda Alarm</span>
+            </div>
+            <div class="snooze-grid">
+                <button class="snooze-btn" onclick="snoozeAlarm(5)">5 Menit</button>
+                <button class="snooze-btn" onclick="snoozeAlarm(10)">10 Menit</button>
+                <button class="snooze-btn" onclick="snoozeAlarm(15)">15 Menit</button>
+            </div>
+            {% if alarm_status.snooze_count > 0 %}
+            <div class="snooze-info">Sudah snooze {{ alarm_status.snooze_count }}×</div>
+            {% endif %}
+        </div>
+
+        <!-- Dismiss Card -->
+        <div class="alarm-card">
+            <div class="alarm-card-header">
+                <span class="icon">🧮</span>
+                <span>Matikan Alarm</span>
+            </div>
+
+            <div class="math-box">
+                <div class="math-question" id="mathQuestion">{{ alarm_status.math_question }} = ?</div>
+                <div class="math-hint">Jawab soal untuk mematikan alarm</div>
+            </div>
+
+            <form class="answer-row" onsubmit="dismissAlarm(event)">
+                <input type="number" class="answer-input" id="answerInput" placeholder="Jawaban" autocomplete="off"
+                    autofocus>
+                <button type="submit" class="submit-btn">JAWAB</button>
+            </form>
+
+            <div id="message"></div>
+        </div>
+
+        {% else %}
+        <!-- No Active Alarm -->
+        <div class="no-alarm">
+            <div class="no-alarm-icon">✅</div>
+            <h2>Tidak Ada Alarm Aktif</h2>
+            <p>Kembali ke <a href="/">Dashboard</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+
+            const clockEl = document.getElementById('clock');
+            if (clockEl) clockEl.textContent = `${h}:${m}:${s}`;
+
+            const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            const dateEl = document.getElementById('date');
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('id-ID', opts);
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function checkAlarmStatus() {
+            try {
+                const res = await fetch('/api/alarm/active/status');
+                const data = await res.json();
+                if (!data.is_active && document.querySelector('.alarm-badge')) {
+                    window.location.reload();
+                }
+            } catch (e) { }
+        }
+        setInterval(checkAlarmStatus, 3000);
+
+        async function snoozeAlarm(min) {
+            try {
+                const res = await fetch('/api/alarm/active/snooze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ minutes: min })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const t = new Date(data.resume_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    showMsg(`Alarm ditunda ${min} menit. Akan berbunyi jam ${t}`, 'success');
+                    setTimeout(() => location.href = '/', 2000);
+                } else {
+                    showMsg(data.error || 'Gagal snooze', 'error');
+                }
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function dismissAlarm(e) {
+            e.preventDefault();
+            const input = document.getElementById('answerInput');
+            const ans = parseInt(input.value);
+            if (isNaN(ans)) return showMsg('Masukkan angka', 'error');
+
+            try {
+                const res = await fetch('/api/alarm/active/dismiss', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answer: ans })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMsg('✅ ' + data.message, 'success');
+                    setTimeout(() => location.href = '/', 2000);
+                } else if (data.error === 'wrong_answer') {
+                    showMsg('❌ ' + data.message, 'error');
+                    if (data.new_question) {
+                        document.getElementById('mathQuestion').textContent = data.new_question + ' = ?';
+                    }
+                    input.value = '';
+                    input.focus();
+                } else {
+                    showMsg(data.error || 'Error', 'error');
+                }
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
+            }
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('message');
+            if (el) {
+                el.className = 'msg ' + type;
+                el.textContent = text;
+            }
+        }
+
+        window.onbeforeunload = function () {
+            if (document.querySelector('.alarm-badge')) {
+                return 'Alarm masih aktif!';
+            }
+        };
+    </script>
+</body>
+
+</html>

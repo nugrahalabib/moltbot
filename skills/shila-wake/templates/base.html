@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Shila Wake System{% endblock %}</title>
+    <meta name="color-scheme" content="dark light">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/wake.css">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="shell">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <span style="font-size: 24px;">🌅</span>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">SHILA WAKE</div>
+                        <div class="brand-sub">Smart Alarm System</div>
+                    </div>
+                </div>
+            </div>
+            <div class="topbar-status">
+                <div class="pill">
+                    <span class="statusDot ok"></span>
+                    <span>Status</span>
+                    <span class="mono" id="systemStatus">Active</span>
+                </div>
+                <div class="current-time-pill">
+                    <span class="mono" id="clock">--:--:--</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Sidebar -->
+        <aside class="nav">
+            <div class="nav-group">
+                <div class="nav-label nav-label--static">
+                    <span class="nav-label__text">Main</span>
+                </div>
+                <div class="nav-group__items">
+                    <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                        <span class="nav-item__icon">📊</span>
+                        <span class="nav-item__text">Dashboard</span>
+                    </a>
+                    <a href="/alarms" class="nav-item {% if active_page == 'alarms' %}active{% endif %}">
+                        <span class="nav-item__icon">⏰</span>
+                        <span class="nav-item__text">Alarms</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label nav-label--static">
+                    <span class="nav-label__text">Automation</span>
+                </div>
+                <div class="nav-group__items">
+                    <a href="/routines" class="nav-item {% if active_page == 'routines' %}active{% endif %}">
+                        <span class="nav-item__icon">🎛️</span>
+                        <span class="nav-item__text">Routines</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label nav-label--static">
+                    <span class="nav-label__text">Insights</span>
+                </div>
+                <div class="nav-group__items">
+                    <a href="/analytics" class="nav-item {% if active_page == 'analytics' %}active{% endif %}">
+                        <span class="nav-item__icon">📈</span>
+                        <span class="nav-item__text">Analytics</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <section class="content-header">
+                <div>
+                    <div class="page-title">{% block page_title %}Dashboard{% endblock %}</div>
+                    <div class="page-sub">{% block page_sub %}Overview of your wake system{% endblock %}</div>
+                </div>
+                <div class="page-meta">
+                    <div class="current-date mono" id="currentDate">--</div>
+                </div>
+            </section>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
